@@ -4,6 +4,17 @@ const { exec } = require('child_process');
 const fs = require('fs').promises;
 const os = require('os-utils');
 
+const execPromise = (command, options) => new Promise((resolve, reject) => {
+    exec(command, options, (err, stdout, stderr) => {
+        if (err) {
+            console.error(`Erreur pour la commande "${command}": ${stderr}`);
+            reject(stderr);
+            return;
+        }
+        resolve(stdout.trim());
+    });
+});
+
 function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1280,
@@ -64,24 +75,37 @@ ipcMain.on('project-action', (event, { action, path: projectPath }) => {
     }
 });
 
+ipcMain.handle('git:command', async (event, { command, path: projectPath }) => {
+    if (!projectPath) return { success: false, message: 'Chemin du projet non fourni.' };
+    try {
+        const stdout = await execPromise(`git ${command}`, { cwd: projectPath });
+        return { success: true, message: stdout || `Commande "git ${command}" réussie.` };
+    } catch (error) {
+        return { success: false, message: error.toString() };
+    }
+});
+
 ipcMain.handle('get-project-details', async (event, projectPath) => {
     const details = { branch: null, dependencies: null, hasChanges: false };
     if (!projectPath) return details;
     try {
-        const execPromise = (command, options) => new Promise((resolve, reject) => {
-            exec(command, options, (err, stdout) => {
-                if (err) return reject(err);
-                resolve(stdout.trim());
-            });
-        });
         details.branch = await execPromise('git branch --show-current', { cwd: projectPath }).catch(() => null);
         const gitStatus = await execPromise('git status --porcelain', { cwd: projectPath }).catch(() => '');
         details.hasChanges = gitStatus !== '';
-        const packageJsonPath = path.join(projectPath, 'package.json');
-        const packageJsonContent = await fs.readFile(packageJsonPath, 'utf-8');
-        const packageJson = JSON.parse(packageJsonContent);
-        details.dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
-    } catch (error) {}
+        
+        try {
+            const packageJsonPath = path.join(projectPath, 'package.json');
+            const packageJsonContent = await fs.readFile(packageJsonPath, 'utf-8');
+            const packageJson = JSON.parse(packageJsonContent);
+            const deps = { ...(packageJson.dependencies || {}), ...(packageJson.devDependencies || {}) };
+            details.dependencies = Object.keys(deps).length;
+        } catch (e) {
+            details.dependencies = null;
+        }
+
+    } catch (error) {
+        console.error(`Erreur lors de la récupération des détails pour ${projectPath}:`, error);
+    }
     return details;
 });
 
@@ -104,9 +128,8 @@ ipcMain.on('save-items', async (event, { filePath, data }) => {
   try {
     const fullPath = path.join(__dirname, filePath);
     await fs.writeFile(fullPath, JSON.stringify(data, null, 2));
-    event.sender.send('save-success');
   } catch (err) {
-    event.sender.send('save-error', err.message);
+    console.error(`Erreur de sauvegarde pour ${filePath}:`, err);
   }
 });
 
@@ -114,5 +137,4 @@ ipcMain.on('launch-project', (event, {commands, name}) => {
   commands.forEach(command => {
     exec(command, (error) => { if (error) console.error(`Erreur d'exécution pour "${command}": ${error.message}`); });
   });
-  event.sender.send('launch-success', name);
 });

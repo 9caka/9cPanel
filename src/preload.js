@@ -15,4 +15,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getProjectDetails: (projectPath) => ipcRenderer.invoke('get-project-details', projectPath),
   projectAction: (payload) => ipcRenderer.send('project-action', payload),
   onLaunchSuccess: (callback) => ipcRenderer.on('launch-success', (event, ...args) => callback(...args)),
+  gitCommand: (payload) => ipcRenderer.invoke('git:command', payload),
 });

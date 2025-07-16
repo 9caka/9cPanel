@@ -315,6 +315,9 @@ body {
     border-top: 1px solid var(--color-border-primary);
     padding-top: 0.75rem;
     margin-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 .detail-item {
@@ -323,8 +326,16 @@ body {
     gap: 0.5rem;
 }
 
-.git-status.dirty {
-    color: #f59e0b;
+.git-status.dirty .git-dirty-indicator {
+    background-color: #f59e0b;
+}
+
+.git-dirty-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #10b981;
+    transition: background-color 0.3s;
 }
 
 .card-actions {
@@ -348,7 +359,33 @@ body {
     color: var(--color-text-main);
 }
 
-/* NOUVEAU : Styles pour les liens personnalisés */
+.action-btn.loading {
+    cursor: not-allowed;
+}
+
+.action-btn .spinner {
+    display: none;
+}
+
+.action-btn.loading .spinner {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+}
+
+.action-btn.loading .btn-text {
+    display: none;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .custom-links-container {
     display: flex;
     flex-wrap: wrap;

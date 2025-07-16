@@ -247,12 +247,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.electronAPI.getProjectDetails(item.path).then(details => {
                         const detailsContainer = itemCard.querySelector('.project-details-container');
                         const actionsContainer = itemCard.querySelector('.card-actions-container');
-                        if (detailsContainer && (details.branch || details.dependencies)) {
-                            const hasChangesClass = details.hasChanges ? 'dirty' : '';
-                            detailsContainer.innerHTML = `<div class="project-details">${details.branch ? `<div class="detail-item git-status ${hasChangesClass}"><i class="fas fa-code-branch"></i><span>${details.branch}</span></div>` : ''}${details.dependencies ? `<div class="detail-item"><i class="fas fa-box-open"></i><span>${Object.keys(details.dependencies).length} deps</span></div>` : ''}</div>`;
+                        if (detailsContainer) {
+                            let detailsHtml = '';
+                            if (details.branch) {
+                                const dirtyClass = details.hasChanges ? 'dirty' : '';
+                                detailsHtml += `<div class="detail-item git-status ${dirtyClass}"><div class="git-dirty-indicator"></div><i class="fas fa-code-branch"></i><span>${details.branch}</span></div>`;
+                            }
+                            if (details.dependencies !== null) {
+                                detailsHtml += `<div class="detail-item"><i class="fas fa-box-open"></i><span>${details.dependencies} dépendances</span></div>`;
+                            }
+                            if (detailsHtml) {
+                                detailsContainer.innerHTML = `<div class="project-details">${detailsHtml}</div>`;
+                            }
                         }
                         if (actionsContainer) {
-                            actionsContainer.innerHTML = `<div class="card-actions"><button class="action-btn" data-action="open-explorer" title="Ouvrir dans l'explorateur"><i class="fas fa-folder-open"></i></button><button class="action-btn" data-action="open-terminal" title="Ouvrir un terminal"><i class="fas fa-terminal"></i></button></div>`;
+                            let actionsHtml = `<div class="card-actions"><button class="action-btn" data-action="open-explorer" title="Ouvrir dans l'explorateur"><i class="fas fa-folder-open"></i></button><button class="action-btn" data-action="open-terminal" title="Ouvrir un terminal"><i class="fas fa-terminal"></i></button>`;
+                            if(details.branch) {
+                                actionsHtml += `<button class="action-btn git-btn" data-action="git-pull" title="Git Pull"><span class="btn-text"><i class="fas fa-arrow-down"></i></span><i class="fas fa-spinner spinner"></i></button><button class="action-btn git-btn" data-action="git-push" title="Git Push"><span class="btn-text"><i class="fas fa-arrow-up"></i></span><i class="fas fa-spinner spinner"></i></button>`;
+                            }
+                            actionsHtml += `</div>`;
+                            actionsContainer.innerHTML = actionsHtml;
                         }
                     });
                 }
@@ -278,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
         function openEditModal(index = null) {
             dom.editForm.reset();
             document.getElementById('commands-list').innerHTML = '';
-            document.getElementById('links-list').innerHTML = ''; // Vider les liens
+            document.getElementById('links-list').innerHTML = '';
 
             if (index !== null && state.currentItems[index]) {
                 const item = state.currentItems[index];
@@ -311,7 +325,6 @@ document.addEventListener('DOMContentLoaded', () => {
             commandsList.appendChild(div);
         }
 
-        // NOUVEAU : Fonction pour ajouter un champ de lien dans la modale
         function addLinkInput(name = '', url = '') {
             const linksList = document.getElementById('links-list');
             const div = document.createElement('div');
@@ -607,7 +620,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 document.getElementById('doc-search-form').addEventListener('submit', (e) => { e.preventDefault(); const query = document.getElementById('doc-search-input').value; const engine = document.getElementById('doc-search-engine').value; if (!query) return; let url; switch (engine) { case 'mdn': url = `https://developer.mozilla.org/search?q=${encodeURIComponent(query)}`; break; case 'stackoverflow': url = `https://stackoverflow.com/search?q=${encodeURIComponent(query)}`; break; case 'devdocs': url = `https://devdocs.io/#q=${encodeURIComponent(query)}`; break; case 'google': url = `https://www.google.com/search?q=${encodeURIComponent(query)}`; break; } if (url) window.electronAPI.openExternalLink(url); });
 
-                // NOUVEAU : Logique pour le bloc-notes (Scratchpad)
                 const scratchpadInput = document.getElementById('scratchpad-input');
                 let scratchpadTimeout;
                 const loadScratchpad = async () => {
@@ -724,7 +736,20 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (button.classList.contains('action-btn')) {
                 const action = button.dataset.action;
                 if (item && item.path) {
-                    window.electronAPI.projectAction({ action, path: item.path });
+                    if (action.startsWith('git-')) {
+                        button.classList.add('loading');
+                        const command = action.replace('git-', '');
+                        const result = await window.electronAPI.gitCommand({ command, path: item.path });
+                        button.classList.remove('loading');
+                        if (result.success) {
+                            showCustomNotification(`Git ${command} réussi !`);
+                            renderItems(); // Refresh to show new status
+                        } else {
+                            showCustomNotification(`Erreur Git: ${result.message}`, 'error');
+                        }
+                    } else {
+                        window.electronAPI.projectAction({ action, path: item.path });
+                    }
                 }
             } else if (button.classList.contains('edit')) {
                 openEditModal(index);

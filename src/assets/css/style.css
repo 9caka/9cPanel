@@ -180,6 +180,11 @@ body {
     z-index: 10001;
 }
 
+#confirm-modal {
+    z-index: 10002;
+}
+
+
 .back-button {
     position: absolute;
     left: 1rem;
@@ -341,6 +346,39 @@ body {
 .action-btn:hover {
     background-color: var(--color-border-primary);
     color: var(--color-text-main);
+}
+
+/* NOUVEAU : Styles pour les liens personnalisés */
+.custom-links-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border-primary);
+}
+
+.custom-link-btn {
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-tertiary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 1px solid var(--color-border-primary);
+}
+
+.custom-link-btn:hover {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.link-item {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
 }
 
 .modal-input {
@@ -647,4 +685,144 @@ body {
     position: relative;
     z-index: 1;
     pointer-events: none;
+}
+
+.theme-switcher {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+}
+
+.theme-toggle-label {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-bg-tertiary);
+    transition: .4s;
+    border-radius: 28px;
+}
+
+.theme-toggle-label .ball {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+.theme-toggle-label i {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #f59e0b;
+    /* Jaune pour le soleil/lune */
+}
+
+.theme-toggle-label .fa-sun {
+    left: 6px;
+    opacity: 0;
+}
+
+.theme-toggle-label .fa-moon {
+    right: 6px;
+    opacity: 1;
+}
+
+#theme-toggle:checked+.theme-toggle-label {
+    background-color: var(--accent-color);
+}
+
+#theme-toggle:checked+.theme-toggle-label .ball {
+    transform: translateX(22px);
+}
+
+html[data-theme="light"] .theme-toggle-label .fa-sun {
+    opacity: 1;
+}
+
+html[data-theme="light"] .theme-toggle-label .fa-moon {
+    opacity: 0;
+}
+
+.color-swatch {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    border: 3px solid transparent;
+}
+
+.color-swatch:hover {
+    transform: scale(1.1);
+}
+
+.color-swatch.active {
+    border-color: var(--color-text-main);
+}
+
+.notification-toast {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-main);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-left: 4px solid;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: slide-in 0.3s ease-out, fade-out 0.3s ease-in 2.7s forwards;
+}
+
+.notification-toast.success {
+    border-color: #10b981;
+    /* Vert */
+}
+
+.notification-toast.error {
+    border-color: #ef4444;
+    /* Rouge */
+}
+
+.notification-toast i {
+    font-size: 1.25rem;
+}
+
+.notification-toast.success .fa-check-circle {
+    color: #10b981;
+}
+
+.notification-toast.error .fa-exclamation-circle {
+    color: #ef4444;
+}
+
+@keyframes slide-in {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fade-out {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(10px);
+    }
 }

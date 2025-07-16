@@ -1,4 +1,3 @@
-<!-- Fichier à placer dans : MonPanel/src/index.html -->
 <!DOCTYPE html>
 <html lang="fr" data-theme="dark">
 
@@ -17,7 +16,6 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" id="hljs-theme">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
-    <!-- Chemin vers votre fichier CSS local -->
     <link rel="stylesheet" href="./assets/css/style.css">
 </head>
 
@@ -26,10 +24,9 @@
     <div id="title-bar">
         <div id="title">Mon Panel</div>
         <div id="title-bar-btns"><button id="min-btn" class="title-bar-btn">-</button><button id="max-btn"
-                class="title-bar-btn">▢</button><button id="close-btn" class="title-bar-btn close-btn">×</button></div>
+                class="title-bar-btn">▢</button><button id="close-btn" class="title-bar-btn close-btn">X</button></div>
     </div>
 
-    <!-- Écran d'accueil -->
     <div id="welcome-screen" class="view-container">
         <button id="settings-btn"
             class="absolute top-12 right-4 text-secondary hover:text-accent transition-colors text-xl"><i
@@ -50,7 +47,6 @@
         </div>
     </div>
 
-    <!-- Contenu principal pour Projets & Gaming -->
     <div id="main-content" class="view-container is-inactive">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 pt-16">
             <div class="relative mb-8 flex justify-center items-center"><button id="back-btn" class="back-button"><i
@@ -59,11 +55,18 @@
                     class="absolute right-0 top-1/2 -translate-y-1/2 text-secondary hover:text-accent transition-colors p-2 rounded-md"><i
                         class="fas fa-pencil-alt"></i></button>
             </div>
+            <div class="mb-6">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <i class="fas fa-search text-tertiary"></i>
+                    </span>
+                    <input type="text" id="project-search-input" class="modal-input w-full !pl-10" placeholder="Rechercher un projet...">
+                </div>
+            </div>
             <div id="items-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
         </div>
     </div>
 
-    <!-- Vue pour la Boîte à Outils -->
     <div id="devtools-view" class="view-container is-inactive">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 pt-16">
             <div class="relative mb-8 flex justify-center items-center"><button id="devtools-back-btn"
@@ -200,17 +203,48 @@
                                 </select><button type="submit" class="btn-primary w-full">Rechercher</button></form>
                         </div>
                     </div>
+                    <div class="widget">
+                        <h3 class="widget-header"><i class="fas fa-sticky-note mr-2"></i>Notes Rapides</h3>
+                        <div class="widget-content">
+                            <textarea id="scratchpad-input" class="modal-input w-full h-48 text-sm" placeholder="Vos notes ici..."></textarea>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Vue pour les Paramètres -->
     <div id="settings-view" class="view-container is-inactive">
-        <!-- Contenu des paramètres -->
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 pt-16">
+            <div class="relative mb-8 flex justify-center items-center">
+                <button id="settings-back-btn" class="back-button"><i class="fas fa-arrow-left mr-2"></i>
+                    Retour</button>
+                <h2 class="text-3xl font-bold text-main">Paramètres</h2>
+            </div>
+            <div class="max-w-md mx-auto space-y-8">
+                <div class="widget">
+                    <h3 class="widget-header">Thème</h3>
+                    <div class="widget-content flex justify-between items-center">
+                        <span class="text-main">Mode d'affichage</span>
+                        <div class="theme-switcher">
+                            <input type="checkbox" id="theme-toggle" class="hidden">
+                            <label for="theme-toggle" class="theme-toggle-label">
+                                <i class="fas fa-sun"></i>
+                                <i class="fas fa-moon"></i>
+                                <span class="ball"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="widget">
+                    <h3 class="widget-header">Couleur d'accentuation</h3>
+                    <div id="accent-color-picker" class="widget-content grid grid-cols-6 gap-4">
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Modales -->
     <div id="edit-modal"
         class="modal-overlay is-inactive">
         <form id="edit-form"
@@ -237,6 +271,13 @@
                                 id="selected-icon-name" class="text-tertiary">Choisir une icône...</span></div><i
                             class="fas fa-chevron-down text-tertiary"></i>
                     </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-secondary mb-2">Liens Personnalisés</label>
+                    <div id="links-list" class="space-y-3"></div>
+                    <button type="button" id="add-link-btn" class="btn-helper mt-3">
+                        <i class="fas fa-plus mr-2"></i>Ajouter un lien
+                    </button>
                 </div>
                 <div class="mb-6"><label class="block text-sm font-medium text-secondary mb-2">Séquence
                         d'actions</label>
@@ -267,7 +308,20 @@
         </div>
     </div>
 
-    <!-- Chemin vers votre fichier JS local -->
+    <div id="confirm-modal" class="modal-overlay is-inactive">
+        <div class="bg-primary p-8 rounded-xl shadow-2xl w-full max-w-sm border border-secondary">
+            <h3 class="text-lg font-bold text-main mb-4">Confirmation requise</h3>
+            <p id="confirm-message" class="text-secondary mb-6">Êtes-vous sûr de vouloir continuer ?</p>
+            <div class="flex justify-end gap-4">
+                <button id="confirm-cancel-btn" class="btn-secondary">Annuler</button>
+                <button id="confirm-ok-btn" class="btn-primary">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification-container" class="fixed bottom-4 right-4 z-[10002] w-80 space-y-3">
+    </div>
+
     <script src="./assets/js/renderer.js"></script>
 </body>
 

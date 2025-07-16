@@ -15,5 +15,4 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getProjectDetails: (projectPath) => ipcRenderer.invoke('get-project-details', projectPath),
   projectAction: (payload) => ipcRenderer.send('project-action', payload),
   onLaunchSuccess: (callback) => ipcRenderer.on('launch-success', (event, ...args) => callback(...args)),
-  showNotification: (options) => ipcRenderer.send('show-notification', options),
 });

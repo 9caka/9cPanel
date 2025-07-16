@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
 const fs = require('fs').promises;
@@ -25,8 +25,6 @@ function createWindow() {
   
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
-    // Décommentez pour ouvrir les outils de développement au démarrage
-    // mainWindow.webContents.openDevTools(); 
   });
 
   setInterval(() => {
@@ -46,11 +44,6 @@ function createWindow() {
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
-
-
-ipcMain.on('show-notification', (event, { title, body }) => {
-    new Notification({ title, body }).show();
-});
 
 ipcMain.on('open-external-link', (event, url) => shell.openExternal(url));
 

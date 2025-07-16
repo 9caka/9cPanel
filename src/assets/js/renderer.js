@@ -1,3 +1,6 @@
+// Fichier à placer dans : MonPanel/src/assets/js/renderer.js
+
+// --- Fonctions utilitaires (pures, sans dépendances externes) ---
 const hexToRgb = (hex) => { let r = 0, g = 0, b = 0; if (hex.length === 4) { r = "0x" + hex[1] + hex[1]; g = "0x" + hex[2] + hex[2]; b = "0x" + hex[3] + hex[3]; } else if (hex.length === 7) { r = "0x" + hex[1] + hex[2]; g = "0x" + hex[3] + hex[4]; b = "0x" + hex[5] + hex[6]; } return { r: +r, g: +g, b: +b }; };
 const rgbToHex = (r, g, b) => "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
 const rgbToHsl = (r, g, b) => { r /= 255; g /= 255; b /= 255; let max = Math.max(r, g, b), min = Math.min(r, g, b); let h, s, l = (max + min) / 2; if (max === min) { h = s = 0; } else { let d = max - min; s = l > 0.5 ? d / (2 - max - min) : d / (max + min); switch (max) { case r: h = (g - b) / d + (g < b ? 6 : 0); break; case g: h = (b - r) / d + 2; break; case b: h = (r - g) / d + 4; break; } h /= 6; } return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) }; };
@@ -13,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
             allModals: document.querySelectorAll('.modal-overlay'),
             mainContent: document.getElementById('main-content'),
             devtoolsView: document.getElementById('devtools-view'),
+            settingsView: document.getElementById('settings-view'),
             welcomeScreen: document.getElementById('welcome-screen'),
             mainTitle: document.getElementById('main-title'),
             itemsContainer: document.getElementById('items-container'),
@@ -20,6 +24,16 @@ document.addEventListener('DOMContentLoaded', () => {
             editModal: document.getElementById('edit-modal'),
             editForm: document.getElementById('edit-form'),
             iconPickerModal: document.getElementById('icon-picker-modal'),
+            settingsBtn: document.getElementById('settings-btn'),
+            settingsBackBtn: document.getElementById('settings-back-btn'),
+            themeToggle: document.getElementById('theme-toggle'),
+            accentColorPicker: document.getElementById('accent-color-picker'),
+            notificationContainer: document.getElementById('notification-container'),
+            confirmModal: document.getElementById('confirm-modal'),
+            confirmMessage: document.getElementById('confirm-message'),
+            confirmOkBtn: document.getElementById('confirm-ok-btn'),
+            confirmCancelBtn: document.getElementById('confirm-cancel-btn'),
+            projectSearchInput: document.getElementById('project-search-input'),
         };
 
         const state = {
@@ -28,7 +42,52 @@ document.addEventListener('DOMContentLoaded', () => {
             currentFilePath: '',
             settings: { theme: 'dark', accentColor: '#2563eb' },
             devToolsInitialized: false,
+            settingsInitialized: false,
         };
+
+        function showCustomNotification(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `notification-toast ${type}`;
+            
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            
+            toast.innerHTML = `
+                <i class="fas ${iconClass}"></i>
+                <span>${message}</span>
+            `;
+            
+            dom.notificationContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+        
+        function showConfirmationModal(message) {
+            return new Promise(resolve => {
+                dom.confirmMessage.textContent = message;
+                dom.confirmModal.classList.remove('is-inactive');
+
+                const handleOk = () => {
+                    cleanup();
+                    resolve(true);
+                };
+
+                const handleCancel = () => {
+                    cleanup();
+                    resolve(false);
+                };
+                
+                const cleanup = () => {
+                    dom.confirmModal.classList.add('is-inactive');
+                    dom.confirmOkBtn.removeEventListener('click', handleOk);
+                    dom.confirmCancelBtn.removeEventListener('click', handleCancel);
+                };
+
+                dom.confirmOkBtn.addEventListener('click', handleOk);
+                dom.confirmCancelBtn.addEventListener('click', handleCancel);
+            });
+        }
 
         const showView = (viewToShow) => {
             dom.allViews.forEach(view => {
@@ -50,6 +109,66 @@ document.addEventListener('DOMContentLoaded', () => {
             button.appendChild(circle);
         }
 
+        const applySettings = () => {
+            document.documentElement.dataset.theme = state.settings.theme;
+            document.documentElement.style.setProperty('--accent-color', state.settings.accentColor);
+            
+            const accentRGB = hexToRgb(state.settings.accentColor);
+            document.documentElement.style.setProperty('--accent-color-translucent', `rgba(${accentRGB.r}, ${accentRGB.g}, ${accentRGB.b}, 0.1)`);
+
+            const hljsTheme = document.getElementById('hljs-theme');
+            if (state.settings.theme === 'light') {
+                hljsTheme.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css';
+            } else {
+                hljsTheme.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css';
+            }
+            if (state.settingsInitialized) {
+                dom.themeToggle.checked = state.settings.theme === 'light';
+                document.querySelectorAll('.color-swatch').forEach(swatch => {
+                    swatch.classList.toggle('active', swatch.dataset.color === state.settings.accentColor);
+                });
+            }
+        };
+
+        const saveSettings = () => {
+            window.electronAPI.saveItems({ filePath: 'src/data/settings.json', data: state.settings });
+        };
+
+        const loadAndApplySettings = async () => {
+            const loadedSettings = await window.electronAPI.readFile('src/data/settings.json');
+            state.settings = { ...state.settings, ...loadedSettings };
+            applySettings();
+            if (!state.settingsInitialized) {
+                initSettings();
+            }
+        };
+
+        function initSettings() {
+            const accentColors = ['#2563eb', '#8b5cf6', '#db2777', '#f59e0b', '#10b981', '#ef4444'];
+            dom.accentColorPicker.innerHTML = '';
+            accentColors.forEach(color => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.dataset.color = color;
+                swatch.style.backgroundColor = color;
+                swatch.addEventListener('click', () => {
+                    state.settings.accentColor = color;
+                    applySettings();
+                    saveSettings();
+                });
+                dom.accentColorPicker.appendChild(swatch);
+            });
+
+            dom.themeToggle.addEventListener('change', () => {
+                state.settings.theme = dom.themeToggle.checked ? 'light' : 'dark';
+                applySettings();
+                saveSettings();
+            });
+
+            state.settingsInitialized = true;
+            applySettings();
+        }
+
         async function loadItems(jsonPath, title) {
             state.currentFilePath = jsonPath;
             dom.mainTitle.textContent = title;
@@ -60,21 +179,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderItems();
             } catch (error) {
                 console.error(`[Items] Failed to load items from ${jsonPath}:`, error);
+                showCustomNotification('Erreur de chargement des projets.', 'error');
                 dom.itemsContainer.innerHTML = `<div class="bg-red-800 border border-red-600 text-white p-4 rounded-lg col-span-full">${error.message}</div>`;
             }
         }
 
         function renderItems() {
+            const searchTerm = dom.projectSearchInput.value.toLowerCase();
+            const itemsToRender = state.currentItems
+                .map((item, index) => ({ item, originalIndex: index }))
+                .filter(({ item }) =>
+                    item.name.toLowerCase().includes(searchTerm) ||
+                    item.description.toLowerCase().includes(searchTerm)
+                );
+
             dom.itemsContainer.innerHTML = '';
-            if (state.currentItems.length === 0 && !state.isEditMode) {
-                dom.itemsContainer.innerHTML = `<p class="text-center col-span-full text-tertiary">Aucun item. Passez en mode édition pour en ajouter.</p>`;
+            if (itemsToRender.length === 0) {
+                dom.itemsContainer.innerHTML = `<p class="text-center col-span-full text-tertiary">Aucun projet trouvé.</p>`;
+                if (state.isEditMode) {
+                     const addItemCard = document.createElement('div');
+                    addItemCard.className = 'border-2 border-dashed border-secondary hover:border-accent hover:text-accent transition-all duration-300 rounded-xl flex justify-center items-center text-tertiary cursor-pointer min-h-[250px]';
+                    addItemCard.innerHTML = `<div class="text-center"><i class="fas fa-plus fa-2x mb-2"></i><p>Ajouter un item</p></div>`;
+                    addItemCard.addEventListener('click', () => openEditModal());
+                    dom.itemsContainer.appendChild(addItemCard);
+                }
                 return;
             }
 
-            state.currentItems.forEach((item, index) => {
+            itemsToRender.forEach(({ item, originalIndex }) => {
                 const itemCard = document.createElement('div');
                 itemCard.className = 'item-card group';
-                itemCard.dataset.index = index;
+                itemCard.dataset.index = originalIndex;
                 if (state.isEditMode) itemCard.draggable = true;
                 
                 itemCard.innerHTML = `
@@ -84,6 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h3 class="text-xl font-bold mb-2 text-main group-hover:text-accent transition-colors">${item.name}</h3>
                         <p class="text-secondary text-sm mb-6 h-12 overflow-hidden">${item.description}</p>
                     </div>
+                    <div class="project-links-container"></div>
                     <div class="project-details-container"></div>
                     <div class="card-actions-container"></div>
                     <div class="mt-auto pt-4">
@@ -92,6 +228,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         </button>
                     </div>`;
                 dom.itemsContainer.appendChild(itemCard);
+
+                if (item.links && item.links.length > 0) {
+                    const linksContainer = itemCard.querySelector('.project-links-container');
+                    linksContainer.innerHTML = `<div class="custom-links-container"></div>`;
+                    const linkButtonsContainer = linksContainer.querySelector('.custom-links-container');
+                    item.links.forEach(link => {
+                        const linkBtn = document.createElement('button');
+                        linkBtn.className = 'custom-link-btn';
+                        linkBtn.textContent = link.name;
+                        linkBtn.title = link.url;
+                        linkBtn.addEventListener('click', () => window.electronAPI.openExternalLink(link.url));
+                        linkButtonsContainer.appendChild(linkBtn);
+                    });
+                }
 
                 if (item.path) {
                     window.electronAPI.getProjectDetails(item.path).then(details => {
@@ -114,7 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 addItemCard.innerHTML = `<div class="text-center"><i class="fas fa-plus fa-2x mb-2"></i><p>Ajouter un item</p></div>`;
                 addItemCard.addEventListener('click', () => openEditModal());
                 dom.itemsContainer.appendChild(addItemCard);
-                // MODIFIÉ : Appel à la fonction de drag-and-drop
                 addDragAndDropListeners();
             }
         }
@@ -129,6 +278,8 @@ document.addEventListener('DOMContentLoaded', () => {
         function openEditModal(index = null) {
             dom.editForm.reset();
             document.getElementById('commands-list').innerHTML = '';
+            document.getElementById('links-list').innerHTML = ''; // Vider les liens
+
             if (index !== null && state.currentItems[index]) {
                 const item = state.currentItems[index];
                 document.getElementById('modal-title').textContent = 'Modifier l\'item';
@@ -138,6 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('item-path').value = item.path || '';
                 updateSelectedIcon(item.icon);
                 if (item.commands) item.commands.forEach(cmd => addCommandInput(cmd));
+                if (item.links) item.links.forEach(link => addLinkInput(link.name, link.url));
             } else {
                 document.getElementById('modal-title').textContent = 'Ajouter un nouvel item';
                 document.getElementById('edit-index').value = '';
@@ -157,6 +309,20 @@ document.addEventListener('DOMContentLoaded', () => {
             div.innerHTML = `<input type="text" class="command-item-input" value="${command.replace(/"/g, '&quot;')}" placeholder="Entrez une commande..."><button type="button" class="command-item-btn delete" title="Supprimer la commande"><i class="fas fa-trash"></i></button>`;
             div.querySelector('.delete').addEventListener('click', () => div.remove());
             commandsList.appendChild(div);
+        }
+
+        // NOUVEAU : Fonction pour ajouter un champ de lien dans la modale
+        function addLinkInput(name = '', url = '') {
+            const linksList = document.getElementById('links-list');
+            const div = document.createElement('div');
+            div.className = 'link-item';
+            div.innerHTML = `
+                <input type="text" class="modal-input link-name-input" value="${name}" placeholder="Nom du lien (ex: GitHub)">
+                <input type="text" class="modal-input link-url-input" value="${url}" placeholder="URL (ex: https://...)">
+                <button type="button" class="command-item-btn delete" title="Supprimer le lien"><i class="fas fa-trash"></i></button>
+            `;
+            div.querySelector('.delete').addEventListener('click', () => div.remove());
+            linksList.appendChild(div);
         }
 
         async function openIconPicker() {
@@ -182,6 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } catch (error) {
                 console.error("Failed to load icons:", error);
+                showCustomNotification("Erreur de chargement des icônes.", "error");
                 iconGrid.innerHTML = '<p class="text-red-400 col-span-full text-center">Erreur de chargement des icônes.</p>';
             }
         }
@@ -207,7 +374,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // MODIFIÉ : Réintégration de la logique de drag-and-drop
         function addDragAndDropListeners() {
             const cards = dom.itemsContainer.querySelectorAll('.item-card[draggable="true"]');
             let draggedItem = null;
@@ -245,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         .map(c => state.currentItems[parseInt(c.dataset.index)]);
                     state.currentItems = newOrder;
                     window.electronAPI.saveItems({ filePath: state.currentFilePath, data: state.currentItems });
-                    renderItems(); // Re-render to update indexes
+                    renderItems();
                 }
             });
         }
@@ -313,11 +479,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         }); 
                     });
                     document.querySelectorAll('#todo-list .delete').forEach(button => { 
-                        button.addEventListener('click', (e) => { 
+                        button.addEventListener('click', async (e) => { 
                             const index = e.currentTarget.dataset.index; 
-                            todos.splice(index, 1); 
-                            saveTodos(); 
-                            renderTodos(); 
+                            const confirmed = await showConfirmationModal('Supprimer cette tâche ?');
+                            if (confirmed) {
+                                todos.splice(index, 1); 
+                                saveTodos(); 
+                                renderTodos(); 
+                                showCustomNotification('Tâche supprimée.', 'error');
+                            }
                         }); 
                     });
                 };
@@ -395,7 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 const saveSnippets = () => {
                     window.electronAPI.saveItems({ filePath: 'src/data/snippets.json', data: snippets });
-                    window.electronAPI.showNotification({ title: "Snippets", body: "Snippets sauvegardés !" });
+                    showCustomNotification("Snippets sauvegardés !");
                 };
                 const loadSnippets = async () => {
                     snippets = await window.electronAPI.readFile('src/data/snippets.json') || [];
@@ -417,9 +587,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         renderSnippets();
                     }
                 });
-                document.getElementById('delete-snippet-btn').addEventListener('click', () => {
+                document.getElementById('delete-snippet-btn').addEventListener('click', async () => {
                     if (activeSnippetIndex > -1) {
-                        if (confirm(`Supprimer le snippet "${snippets[activeSnippetIndex].title}" ?`)) {
+                        const confirmed = await showConfirmationModal(`Supprimer le snippet "${snippets[activeSnippetIndex].title}" ?`);
+                        if (confirmed) {
                             snippets.splice(activeSnippetIndex, 1);
                             saveSnippets();
                             selectSnippet(activeSnippetIndex > 0 ? activeSnippetIndex - 1 : (snippets.length > 0 ? 0 : -1));
@@ -435,6 +606,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadSnippets();
 
                 document.getElementById('doc-search-form').addEventListener('submit', (e) => { e.preventDefault(); const query = document.getElementById('doc-search-input').value; const engine = document.getElementById('doc-search-engine').value; if (!query) return; let url; switch (engine) { case 'mdn': url = `https://developer.mozilla.org/search?q=${encodeURIComponent(query)}`; break; case 'stackoverflow': url = `https://stackoverflow.com/search?q=${encodeURIComponent(query)}`; break; case 'devdocs': url = `https://devdocs.io/#q=${encodeURIComponent(query)}`; break; case 'google': url = `https://www.google.com/search?q=${encodeURIComponent(query)}`; break; } if (url) window.electronAPI.openExternalLink(url); });
+
+                // NOUVEAU : Logique pour le bloc-notes (Scratchpad)
+                const scratchpadInput = document.getElementById('scratchpad-input');
+                let scratchpadTimeout;
+                const loadScratchpad = async () => {
+                    const content = await window.electronAPI.readFile('src/data/scratchpad.txt');
+                    scratchpadInput.value = content || '';
+                };
+                const saveScratchpad = () => {
+                    window.electronAPI.saveItems({ filePath: 'src/data/scratchpad.txt', data: scratchpadInput.value });
+                    showCustomNotification('Note rapide sauvegardée.');
+                };
+                scratchpadInput.addEventListener('keyup', () => {
+                    clearTimeout(scratchpadTimeout);
+                    scratchpadTimeout = setTimeout(saveScratchpad, 1500);
+                });
+                loadScratchpad();
+
 
                 state.devToolsInitialized = true;
                 console.log('[Init] Dev tools initialized successfully.');
@@ -470,6 +659,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('back-btn').addEventListener('click', () => showView(dom.welcomeScreen));
         document.getElementById('devtools-back-btn').addEventListener('click', () => showView(dom.welcomeScreen));
         
+        dom.settingsBtn.addEventListener('click', () => showView(dom.settingsView));
+        dom.settingsBackBtn.addEventListener('click', () => showView(dom.welcomeScreen));
+        
         dom.editModeBtn.addEventListener('click', toggleEditMode);
         document.getElementById('cancel-edit-btn').addEventListener('click', closeEditModal);
         document.getElementById('icon-picker-trigger').addEventListener('click', openIconPicker);
@@ -484,17 +676,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const path = await window.electronAPI.openDialog({ title: 'Choisir un dossier à ouvrir', properties: ['openDirectory'] });
             if (path) addCommandInput(`code "${path}"`);
         });
+        document.getElementById('add-link-btn').addEventListener('click', () => addLinkInput());
 
         dom.editForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const index = document.getElementById('edit-index').value;
             const commands = Array.from(document.getElementById('commands-list').querySelectorAll('.command-item-input')).map(input => input.value).filter(cmd => cmd.trim() !== '');
+            const links = Array.from(document.getElementById('links-list').querySelectorAll('.link-item')).map(item => ({
+                name: item.querySelector('.link-name-input').value,
+                url: item.querySelector('.link-url-input').value,
+            })).filter(link => link.name && link.url);
+
             const newItem = {
                 name: document.getElementById('item-name').value,
                 description: document.getElementById('item-description').value,
                 path: document.getElementById('item-path').value.trim(),
                 icon: document.getElementById('item-icon').value,
                 commands: commands,
+                links: links,
             };
             if (index) {
                 state.currentItems[index] = newItem;
@@ -502,11 +701,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.currentItems.push(newItem);
             }
             window.electronAPI.saveItems({ filePath: state.currentFilePath, data: state.currentItems });
+            showCustomNotification('Projet sauvegardé !');
             renderItems();
             closeEditModal();
         });
         
-        dom.itemsContainer.addEventListener('click', (e) => {
+        dom.itemsContainer.addEventListener('click', async (e) => {
             const button = e.target.closest('button');
             if (!button) return;
             
@@ -519,6 +719,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (button.classList.contains('launch-btn') && !state.isEditMode) {
                 if (item && item.commands) {
                     window.electronAPI.launchProject({ commands: item.commands, name: item.name });
+                    showCustomNotification(`Lancement de ${item.name}...`);
                 }
             } else if (button.classList.contains('action-btn')) {
                 const action = button.dataset.action;
@@ -528,13 +729,19 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (button.classList.contains('edit')) {
                 openEditModal(index);
             } else if (button.classList.contains('delete')) {
-                if (confirm(`Êtes-vous sûr de vouloir supprimer "${item.name}" ?`)) {
+                const confirmed = await showConfirmationModal(`Êtes-vous sûr de vouloir supprimer "${item.name}" ?`);
+                if (confirmed) {
                     state.currentItems.splice(index, 1);
                     window.electronAPI.saveItems({ filePath: state.currentFilePath, data: state.currentItems });
+                    showCustomNotification('Projet supprimé.', 'error');
                     renderItems();
                 }
             }
         });
+
+        dom.projectSearchInput.addEventListener('input', renderItems);
+
+        loadAndApplySettings();
 
     } catch (error) {
         console.error("Critical error during initialization:", error);

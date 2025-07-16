@@ -19,12 +19,10 @@
     ]
   },
   {
-    "name": "Mon Site Web",
-    "description": "Projet de site vitrine pour un client.",
-    "path": "C:\\Users\\lequi\\Documents\\Projets\\MonSiteWeb",
+    "name": "Panel",
+    "description": "Projet de panel.",
+    "path": "C:\\Users\\lequi\\Documents\\GitHub\\9cPanel",
     "icon": "fas fa-globe",
-    "commands": [
-      "code \"C:\\Users\\lequi\\Documents\\Projets\\MonSiteWeb\""
-    ]
+    "commands": []
   }
 ]

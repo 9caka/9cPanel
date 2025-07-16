@@ -5,7 +5,7 @@
     "path": "",
     "icon": "fab fa-steam",
     "commands": [
-      "start steam://"
+      "start C:\\Users\\lequi\\AppData\\Local\\steam://"
     ]
   },
   {

@@ -1,6 +1,3 @@
-// Fichier à placer dans : MonPanel/src/assets/js/renderer.js
-
-// --- Fonctions utilitaires (pures, sans dépendances externes) ---
 const hexToRgb = (hex) => { let r = 0, g = 0, b = 0; if (hex.length === 4) { r = "0x" + hex[1] + hex[1]; g = "0x" + hex[2] + hex[2]; b = "0x" + hex[3] + hex[3]; } else if (hex.length === 7) { r = "0x" + hex[1] + hex[2]; g = "0x" + hex[3] + hex[4]; b = "0x" + hex[5] + hex[6]; } return { r: +r, g: +g, b: +b }; };
 const rgbToHex = (r, g, b) => "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
 const rgbToHsl = (r, g, b) => { r /= 255; g /= 255; b /= 255; let max = Math.max(r, g, b), min = Math.min(r, g, b); let h, s, l = (max + min) / 2; if (max === min) { h = s = 0; } else { let d = max - min; s = l > 0.5 ? d / (2 - max - min) : d / (max + min); switch (max) { case r: h = (g - b) / d + (g < b ? 6 : 0); break; case g: h = (b - r) / d + 2; break; case b: h = (r - g) / d + 4; break; } h /= 6; } return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) }; };
@@ -79,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 itemCard.className = 'item-card group';
                 itemCard.dataset.index = index;
                 if (state.isEditMode) itemCard.draggable = true;
-
+                
                 itemCard.innerHTML = `
                     <div class="card-controls"><button class="card-control-btn edit" title="Modifier"><i class="fas fa-pencil-alt"></i></button><button class="card-control-btn delete" title="Supprimer"><i class="fas fa-trash"></i></button></div>
                     <div class="flex-grow pointer-events-none">
@@ -96,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>`;
                 dom.itemsContainer.appendChild(itemCard);
 
-                // La logique ci-dessous va maintenant trouver les conteneurs et fonctionner
                 if (item.path) {
                     window.electronAPI.getProjectDetails(item.path).then(details => {
                         const detailsContainer = itemCard.querySelector('.project-details-container');
@@ -118,6 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 addItemCard.innerHTML = `<div class="text-center"><i class="fas fa-plus fa-2x mb-2"></i><p>Ajouter un item</p></div>`;
                 addItemCard.addEventListener('click', () => openEditModal());
                 dom.itemsContainer.appendChild(addItemCard);
+                // MODIFIÉ : Appel à la fonction de drag-and-drop
+                addDragAndDropListeners();
             }
         }
 
@@ -209,6 +207,62 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
+        // MODIFIÉ : Réintégration de la logique de drag-and-drop
+        function addDragAndDropListeners() {
+            const cards = dom.itemsContainer.querySelectorAll('.item-card[draggable="true"]');
+            let draggedItem = null;
+
+            cards.forEach(card => {
+                card.addEventListener('dragstart', () => {
+                    draggedItem = card;
+                    setTimeout(() => card.classList.add('dragging'), 0);
+                });
+
+                card.addEventListener('dragend', () => {
+                    if (draggedItem) {
+                        draggedItem.classList.remove('dragging');
+                        draggedItem = null;
+                    }
+                });
+            });
+
+            dom.itemsContainer.addEventListener('dragover', e => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(dom.itemsContainer, e.clientY);
+                if (draggedItem) {
+                    if (afterElement == null) {
+                        dom.itemsContainer.appendChild(draggedItem);
+                    } else {
+                        dom.itemsContainer.insertBefore(draggedItem, afterElement);
+                    }
+                }
+            });
+
+            dom.itemsContainer.addEventListener('drop', e => {
+                e.preventDefault();
+                if (draggedItem) {
+                    const newOrder = Array.from(dom.itemsContainer.querySelectorAll('.item-card[draggable="true"]'))
+                        .map(c => state.currentItems[parseInt(c.dataset.index)]);
+                    state.currentItems = newOrder;
+                    window.electronAPI.saveItems({ filePath: state.currentFilePath, data: state.currentItems });
+                    renderItems(); // Re-render to update indexes
+                }
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.item-card[draggable="true"]:not(.dragging)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
         function initDevTools() {
             if (state.devToolsInitialized) return;
             console.log('[Init] Initializing dev tools for the first time...');
@@ -298,7 +352,88 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 document.getElementById('format-json-btn').addEventListener('click', () => { const input = document.getElementById('json-input'); const status = document.getElementById('json-status'); try { const formatted = JSON.stringify(JSON.parse(input.value), null, 2); input.value = formatted; status.textContent = 'JSON valide et formaté !'; status.className = 'text-xs text-center h-4 text-green-400'; } catch (e) { status.textContent = 'Erreur: JSON invalide.'; status.className = 'text-xs text-center h-4 text-red-400'; } });
 
-                // Recherche Documentation
+                const snippetListEl = document.getElementById('snippet-list');
+                const titleInput = document.getElementById('snippet-title');
+                const langInput = document.getElementById('snippet-lang');
+                const codeInput = document.getElementById('snippet-code');
+                const highlightEl = document.getElementById('snippet-highlight');
+                let snippets = [];
+                let activeSnippetIndex = -1;
+
+                const syncHighlight = () => {
+                    if (highlightEl && codeInput) {
+                        highlightEl.textContent = codeInput.value + '\n';
+                        highlightEl.className = `language-${langInput.value}`;
+                        hljs.highlightElement(highlightEl);
+                    }
+                };
+                const renderSnippets = () => {
+                    snippetListEl.innerHTML = '';
+                    snippets.forEach((snippet, index) => {
+                        const div = document.createElement('div');
+                        div.className = `snippet-item ${index === activeSnippetIndex ? 'active' : ''}`;
+                        div.textContent = snippet.title || 'Snippet sans titre';
+                        div.dataset.index = index;
+                        div.addEventListener('click', () => selectSnippet(index));
+                        snippetListEl.appendChild(div);
+                    });
+                };
+                const selectSnippet = (index) => {
+                    activeSnippetIndex = index;
+                    if (index > -1 && snippets[index]) {
+                        const snippet = snippets[index];
+                        titleInput.value = snippet.title;
+                        langInput.value = snippet.lang;
+                        codeInput.value = snippet.code;
+                    } else {
+                        titleInput.value = '';
+                        langInput.value = 'plaintext';
+                        codeInput.value = '';
+                    }
+                    syncHighlight();
+                    renderSnippets();
+                };
+                const saveSnippets = () => {
+                    window.electronAPI.saveItems({ filePath: 'src/data/snippets.json', data: snippets });
+                    window.electronAPI.showNotification({ title: "Snippets", body: "Snippets sauvegardés !" });
+                };
+                const loadSnippets = async () => {
+                    snippets = await window.electronAPI.readFile('src/data/snippets.json') || [];
+                    renderSnippets();
+                    selectSnippet(snippets.length > 0 ? 0 : -1);
+                };
+                document.getElementById('add-snippet-btn').addEventListener('click', () => {
+                    snippets.push({ title: 'Nouveau Snippet', lang: 'plaintext', code: '' });
+                    selectSnippet(snippets.length - 1);
+                });
+                document.getElementById('save-snippet-btn').addEventListener('click', () => {
+                    if (activeSnippetIndex > -1) {
+                        snippets[activeSnippetIndex] = {
+                            title: titleInput.value,
+                            lang: langInput.value,
+                            code: codeInput.value,
+                        };
+                        saveSnippets();
+                        renderSnippets();
+                    }
+                });
+                document.getElementById('delete-snippet-btn').addEventListener('click', () => {
+                    if (activeSnippetIndex > -1) {
+                        if (confirm(`Supprimer le snippet "${snippets[activeSnippetIndex].title}" ?`)) {
+                            snippets.splice(activeSnippetIndex, 1);
+                            saveSnippets();
+                            selectSnippet(activeSnippetIndex > 0 ? activeSnippetIndex - 1 : (snippets.length > 0 ? 0 : -1));
+                        }
+                    }
+                });
+                codeInput.addEventListener('input', syncHighlight);
+                langInput.addEventListener('change', syncHighlight);
+                codeInput.addEventListener('scroll', () => {
+                    highlightEl.scrollTop = codeInput.scrollTop;
+                    highlightEl.scrollLeft = codeInput.scrollLeft;
+                });
+                loadSnippets();
+
                 document.getElementById('doc-search-form').addEventListener('submit', (e) => { e.preventDefault(); const query = document.getElementById('doc-search-input').value; const engine = document.getElementById('doc-search-engine').value; if (!query) return; let url; switch (engine) { case 'mdn': url = `https://developer.mozilla.org/search?q=${encodeURIComponent(query)}`; break; case 'stackoverflow': url = `https://stackoverflow.com/search?q=${encodeURIComponent(query)}`; break; case 'devdocs': url = `https://devdocs.io/#q=${encodeURIComponent(query)}`; break; case 'google': url = `https://www.google.com/search?q=${encodeURIComponent(query)}`; break; } if (url) window.electronAPI.openExternalLink(url); });
 
                 state.devToolsInitialized = true;
@@ -339,6 +474,16 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('cancel-edit-btn').addEventListener('click', closeEditModal);
         document.getElementById('icon-picker-trigger').addEventListener('click', openIconPicker);
         document.getElementById('cancel-icon-picker-btn').addEventListener('click', closeIconPicker);
+
+        document.getElementById('add-manual-command-btn').addEventListener('click', () => addCommandInput(''));
+        document.getElementById('add-file-command-btn').addEventListener('click', async () => {
+            const path = await window.electronAPI.openDialog({ title: 'Choisir un fichier à lancer', properties: ['openFile'] });
+            if (path) addCommandInput(`start "" "${path}"`);
+        });
+        document.getElementById('add-folder-command-btn').addEventListener('click', async () => {
+            const path = await window.electronAPI.openDialog({ title: 'Choisir un dossier à ouvrir', properties: ['openDirectory'] });
+            if (path) addCommandInput(`code "${path}"`);
+        });
 
         dom.editForm.addEventListener('submit', (e) => {
             e.preventDefault();

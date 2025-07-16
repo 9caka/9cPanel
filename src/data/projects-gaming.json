@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Steam",
+    "description": "Lancer la plateforme Steam.",
+    "path": "",
+    "icon": "fab fa-steam",
+    "commands": [
+      "start steam://"
+    ]
+  },
+  {
+    "name": "Discord",
+    "description": "Ouvrir l'application Discord.",
+    "path": "",
+    "icon": "fab fa-discord",
+    "commands": [
+      "C:\\Users\\lequi\\AppData\\Local\\Discord\\Update.exe --processStart Discord.exe"
+    ]
+  }
+]

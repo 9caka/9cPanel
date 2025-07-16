@@ -1,0 +1,248 @@
+<!-- Fichier à placer dans : MonPanel/src/index.html -->
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+        content="script-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;">
+    <title>Mon Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" id="hljs-theme">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <!-- Chemin vers votre fichier CSS local -->
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+
+<body class="bg-primary text-secondary font-sans overflow-hidden">
+
+    <div id="title-bar">
+        <div id="title">Mon Panel</div>
+        <div id="title-bar-btns"><button id="min-btn" class="title-bar-btn">-</button><button id="max-btn"
+                class="title-bar-btn">▢</button><button id="close-btn" class="title-bar-btn close-btn">×</button></div>
+    </div>
+
+    <!-- Écran d'accueil -->
+    <div id="welcome-screen" class="view-container">
+        <button id="settings-btn"
+            class="absolute top-12 right-4 text-secondary hover:text-accent transition-colors text-xl"><i
+                class="fas fa-cog"></i></button>
+        <div class="flex flex-col justify-center items-center h-full">
+            <div class="max-w-md text-center">
+                <h1 class="text-5xl font-bold text-main mb-2">Bienvenue</h1>
+                <p class="text-secondary mb-10">Que souhaitez-vous faire aujourd'hui ?</p>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-6">
+                <button id="dev-btn" class="welcome-btn"><i class="fas fa-code fa-2x mb-3"></i><span>Projets
+                        Dev</span></button>
+                <button id="devtools-btn" class="welcome-btn"><i class="fas fa-tools fa-2x mb-3"></i><span>Boîte à
+                        Outils</span></button>
+                <button id="gaming-btn" class="welcome-btn"><i
+                        class="fas fa-gamepad fa-2x mb-3"></i><span>Gaming</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenu principal pour Projets & Gaming -->
+    <div id="main-content" class="view-container is-inactive">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 pt-16">
+            <div class="relative mb-8 flex justify-center items-center"><button id="back-btn" class="back-button"><i
+                        class="fas fa-arrow-left mr-2"></i> Retour</button>
+                <h1 id="main-title" class="text-3xl font-bold text-main"></h1><button id="edit-mode-btn"
+                    class="absolute right-0 top-1/2 -translate-y-1/2 text-secondary hover:text-accent transition-colors p-2 rounded-md"><i
+                        class="fas fa-pencil-alt"></i></button>
+            </div>
+            <div id="items-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+        </div>
+    </div>
+
+    <!-- Vue pour la Boîte à Outils -->
+    <div id="devtools-view" class="view-container is-inactive">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 pt-16">
+            <div class="relative mb-8 flex justify-center items-center"><button id="devtools-back-btn"
+                    class="back-button"><i class="fas fa-arrow-left mr-2"></i> Retour</button>
+                <h2 class="text-3xl font-bold text-main">Boîte à Outils</h2>
+            </div>
+            <!-- MODIFIÉ : Grille à 4 colonnes pour un layout plus équilibré -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Colonne 1: Moniteur & Todo (prend 1/4 de la largeur) -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="widget">
+                        <h3 class="widget-header"><i class="fas fa-tachometer-alt mr-2"></i>Moniteur Système</h3>
+                        <div class="widget-content">
+                            <div class="stat-item"><span>CPU</span>
+                                <div class="progress-bar-bg">
+                                    <div id="cpu-bar" class="progress-bar"></div>
+                                </div><span id="cpu-percent" class="stat-percent">0%</span>
+                            </div>
+                            <div class="stat-item"><span>RAM</span>
+                                <div class="progress-bar-bg">
+                                    <div id="mem-bar" class="progress-bar"></div>
+                                </div><span id="mem-percent" class="stat-percent">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="widget flex flex-col">
+                        <h3 class="widget-header"><i class="fas fa-check-square mr-2"></i>To-Do List</h3>
+                        <div class="widget-content flex-grow overflow-y-auto pr-2" style="max-height: 220px;">
+                            <ul id="todo-list" class="space-y-2"></ul>
+                        </div>
+                        <div class="p-4 border-t border-primary">
+                            <div class="flex gap-2"><input type="text" id="new-todo-input" class="modal-input flex-grow"
+                                    placeholder="Nouvelle tâche..."><button id="add-todo-btn"
+                                    class="btn-primary !p-3"><i class="fas fa-plus"></i></button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Colonne 2: Utilitaires (prend 2/4 de la largeur) -->
+                <div class="lg:col-span-2 widget">
+                    <h3 class="widget-header"><i class="fas fa-wrench mr-2"></i>Utilitaires</h3>
+                    <div class="p-1">
+                        <div id="tools-tabs" class="flex border-b border-primary overflow-x-auto"><button class="tool-tab active"
+                                data-tab="color-converter">Couleurs</button><button class="tool-tab"
+                                data-tab="unit-converter">Unités</button><button class="tool-tab"
+                                data-tab="lorem-ipsum">Lorem</button><button class="tool-tab"
+                                data-tab="json-formatter">JSON</button><button class="tool-tab"
+                                data-tab="snippets">Snippets</button></div>
+                        <div class="pt-4 px-3">
+                            <div id="color-converter" class="tool-content space-y-3"><input type="color"
+                                    id="color-picker"
+                                    class="w-full h-10 p-0 border-none rounded-md cursor-pointer bg-transparent"
+                                    value="#2563eb">
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex items-center gap-2"><label for="hex-input"
+                                            class="w-12 font-mono">HEX</label><input type="text" id="hex-input"
+                                            class="modal-input"></div>
+                                    <div class="flex items-center gap-2"><label for="rgb-input"
+                                            class="w-12 font-mono">RGB</label><input type="text" id="rgb-input"
+                                            class="modal-input"></div>
+                                    <div class="flex items-center gap-2"><label for="hsl-input"
+                                            class="w-12 font-mono">HSL</label><input type="text" id="hsl-input"
+                                            class="modal-input"></div>
+                                </div>
+                            </div>
+                            <div id="unit-converter" class="tool-content is-inactive space-y-3">
+                                <div class="flex items-center gap-2"><input type="number" id="px-input"
+                                        class="modal-input text-center" placeholder="16"><span
+                                        class="font-mono text-sm">PX</span><i
+                                        class="fas fa-exchange-alt text-tertiary"></i><input type="number"
+                                        id="rem-input" class="modal-input text-center" placeholder="1"><span
+                                        class="font-mono text-sm">REM</span></div>
+                                <div class="text-xs text-center text-tertiary">Base: <input type="number"
+                                        id="base-font-size" value="16" class="bg-tertiary rounded w-12 text-center"> px
+                                </div>
+                            </div>
+                            <div id="lorem-ipsum" class="tool-content is-inactive space-y-3">
+                                <div class="flex items-center gap-2"><label for="lorem-paragraphs"
+                                        class="text-sm">Paragraphes:</label><input type="number" id="lorem-paragraphs"
+                                        value="3" class="modal-input w-20 text-center"></div><button
+                                    id="generate-lorem-btn" class="btn-primary w-full">Générer</button><textarea
+                                    id="lorem-output" class="modal-input w-full text-sm" rows="8" readonly
+                                    placeholder="Le texte généré apparaîtra ici..."></textarea>
+                            </div>
+                            <div id="json-formatter" class="tool-content is-inactive space-y-3"><textarea id="json-input"
+                                    class="modal-input w-full font-mono text-xs" rows="8"
+                                    placeholder="Collez votre JSON ici..."></textarea><button id="format-json-btn"
+                                    class="btn-primary w-full">Formater / Valider</button>
+                                <div id="json-status" class="text-xs text-center h-4"></div>
+                            </div>
+                            <div id="snippets" class="tool-content is-inactive">
+                                <!-- Contenu des snippets -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Colonne 3: Recherche Doc (prend 1/4 de la largeur) -->
+                <div class="lg:col-span-1 widget">
+                    <h3 class="widget-header"><i class="fas fa-book mr-2"></i>Recherche Documentation</h3>
+                    <div class="widget-content">
+                        <form id="doc-search-form" class="space-y-4"><input type="text" id="doc-search-input"
+                                class="modal-input" placeholder="Rechercher..."><select id="doc-search-engine"
+                                class="modal-input">
+                                <option value="mdn">MDN Web Docs</option>
+                                <option value="stackoverflow">Stack Overflow</option>
+                                <option value="devdocs">DevDocs</option>
+                                <option value="google">Google</option>
+                            </select><button type="submit" class="btn-primary w-full">Rechercher</button></form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue pour les Paramètres -->
+    <div id="settings-view" class="view-container is-inactive">
+        <!-- Contenu des paramètres -->
+    </div>
+
+    <!-- Modales -->
+    <div id="edit-modal"
+        class="modal-overlay is-inactive">
+        <form id="edit-form"
+            class="bg-primary p-8 rounded-xl shadow-2xl w-full max-w-3xl border border-secondary flex flex-col h-[90vh]">
+            <h2 id="modal-title" class="text-2xl font-bold text-main mb-6 flex-shrink-0"></h2><input type="hidden"
+                id="edit-index"><input type="hidden" id="item-icon">
+            <div class="flex-grow overflow-y-auto pr-4 -mr-4">
+                <div class="mb-4"><label for="item-name"
+                        class="block text-sm font-medium text-secondary mb-1">Nom</label><input type="text"
+                        id="item-name" class="modal-input" required></div>
+                <div class="mb-4"><label for="item-description"
+                        class="block text-sm font-medium text-secondary mb-1">Description</label><input type="text"
+                        id="item-description" class="modal-input" required></div>
+                <div class="mb-4"><label for="item-path"
+                        class="block text-sm font-medium text-secondary mb-1">Chemin du Projet
+                        (Optionnel)</label><input type="text" id="item-path" class="modal-input"
+                        placeholder="Ex: C:\\Users\\MonNom\\Documents\\Projets\\MonSite"></div>
+                <div class="mb-4"><label class="block text-sm font-medium text-secondary mb-1">Icône</label>
+                    <div id="icon-picker-trigger"
+                        class="modal-input flex items-center justify-between cursor-pointer">
+                        <div class="flex items-center gap-3"><span id="selected-icon-preview"
+                                class="w-6 text-center"><i
+                                    class="fas fa-question-circle text-tertiary"></i></span><span
+                                id="selected-icon-name" class="text-tertiary">Choisir une icône...</span></div><i
+                            class="fas fa-chevron-down text-tertiary"></i>
+                    </div>
+                </div>
+                <div class="mb-6"><label class="block text-sm font-medium text-secondary mb-2">Séquence
+                        d'actions</label>
+                    <div id="commands-list" class="space-y-3"></div>
+                    <div class="flex items-center gap-2 mt-4"><button type="button" id="add-file-command-btn"
+                            class="btn-helper"><i class="fas fa-file-medical mr-2"></i> Lancer
+                            fichier</button><button type="button" id="add-folder-command-btn" class="btn-helper"><i
+                                class="fas fa-folder-plus mr-2"></i> Ouvrir dossier</button><button type="button"
+                            id="add-manual-command-btn" class="btn-helper"><i class="fas fa-terminal mr-2"></i>
+                            Commande</button></div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-4 pt-6 border-t border-secondary flex-shrink-0"><button type="button"
+                    id="cancel-edit-btn" class="btn-secondary">Annuler</button><button type="submit"
+                    class="btn-primary">Sauvegarder</button></div>
+        </form>
+    </div>
+    <div id="icon-picker-modal"
+        class="modal-overlay is-inactive">
+        <div
+            class="bg-primary p-8 rounded-xl shadow-2xl w-full max-w-4xl border border-secondary flex flex-col h-[80vh]">
+            <h2 class="text-2xl font-bold text-main mb-6">Choisir une icône</h2>
+            <div id="icon-grid"
+                class="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-4 overflow-y-auto flex-grow pr-4">
+            </div>
+            <div class="flex justify-end mt-6"><button type="button" id="cancel-icon-picker-btn"
+                    class="btn-secondary">Annuler</button></div>
+        </div>
+    </div>
+
+    <!-- Chemin vers votre fichier JS local -->
+    <script src="./assets/js/renderer.js"></script>
+</body>
+
+</html>

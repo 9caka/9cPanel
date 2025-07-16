@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Sally",
+    "description": "Sally Protection",
+    "path": "C:\\Users\\lequi\\Documents\\GitHub\\Sally-Bot",
+    "icon": "fas fa-server",
+    "commands": [
+      "code \"C:\\Users\\lequi\\Documents\\GitHub\\Sally-Bot\""
+    ]
+  },
+  {
+    "name": "FiveM L'ekip DEV",
+    "description": "Accéder au serveur de développement FiveM.",
+    "path": "C:\\Users\\lequi\\Documents\\GitHub\\Lekip-FiveM",
+    "icon": "fa-solid fa-server",
+    "commands": [
+      "code \"C:\\Users\\lequi\\Documents\\GitHub\\Lekip-FiveM\"",
+      "start \"\" \"C:\\xampp\\xampp-control.exe\""
+    ]
+  },
+  {
+    "name": "Mon Site Web",
+    "description": "Projet de site vitrine pour un client.",
+    "path": "C:\\Users\\lequi\\Documents\\Projets\\MonSiteWeb",
+    "icon": "fas fa-globe",
+    "commands": [
+      "code \"C:\\Users\\lequi\\Documents\\Projets\\MonSiteWeb\""
+    ]
+  }
+]

@@ -26,12 +26,7 @@
     "commands": [
       "code \"C:\\Users\\lequi\\Documents\\GitHub\\9cPanel\""
     ],
-    "links": [
-      {
-        "name": "test",
-        "url": "test"
-      }
-    ]
+    "links": []
   },
   {
     "name": "9cServeur",

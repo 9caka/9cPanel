@@ -7,6 +7,7 @@ const sqlite3 = require('sqlite3').verbose();
 const si = require('systeminformation');
 const Parser = require('rss-parser');
 const parser = new Parser();
+const semver = require('semver');
 
 const openDatabases = new Map();
 
@@ -140,7 +141,7 @@ ipcMain.handle('git:command', async (event, { command, path: projectPath }) => {
 });
 
 ipcMain.handle('get-project-details', async (event, projectPath) => {
-    const details = { branch: null, dependencies: null, hasChanges: false, scripts: null, github: null };
+    const details = { branch: null, dependencies: null, hasChanges: false, scripts: null, github: null, version: null };
     if (!projectPath) return details;
 
     try {
@@ -155,9 +156,11 @@ ipcMain.handle('get-project-details', async (event, projectPath) => {
             const deps = { ...(packageJson.dependencies || {}), ...(packageJson.devDependencies || {}) };
             details.dependencies = Object.keys(deps).length;
             details.scripts = packageJson.scripts || null;
+            details.version = packageJson.version || null;
         } catch (e) {
             details.dependencies = null;
             details.scripts = null;
+            details.version = null;
         }
 
         if (details.branch) {
@@ -175,14 +178,24 @@ ipcMain.handle('get-project-details', async (event, projectPath) => {
                         const owner = match[1];
                         const repo = match[2];
 
-                        const [prs, issues] = await Promise.all([
+                        const [prs, issues, latestRelease] = await Promise.all([
                             octokit.pulls.list({ owner, repo, state: 'open' }),
-                            octokit.issues.listForRepo({ owner, repo, state: 'open', pull_request: false })
+                            octokit.issues.listForRepo({ owner, repo, state: 'open', pull_request: false }),
+                            octokit.repos.getLatestRelease({ owner, repo }).catch(() => null)
                         ]);
                         
+                        let updateInfo = { available: false, version: null };
+                        if (details.version && latestRelease && latestRelease.data.tag_name) {
+                            const latestVersion = semver.clean(latestRelease.data.tag_name);
+                            if (latestVersion && semver.gt(latestVersion, details.version)) {
+                                updateInfo = { available: true, version: latestRelease.data.tag_name };
+                            }
+                        }
+
                         details.github = {
                             prs: prs.data.length,
-                            issues: issues.data.length
+                            issues: issues.data.length,
+                            update: updateInfo
                         };
                     }
                 }

@@ -289,6 +289,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                         }
                         if (githubStatsContainer && details.github) {
+                            let updateHtml = '';
+                            if (details.github.update && details.github.update.available) {
+                                updateHtml = `
+                <div class="github-stat-item" title="Mise à jour disponible : ${details.github.update.version}">
+                    <i class="fas fa-arrow-alt-circle-up update-available"></i>
+                </div>
+            `;
+                            }
+
                             let githubHtml = `
             <div class="github-stat-item" title="Pull Requests Ouvertes">
                 <i class="fas fa-code-pull-request"></i>
@@ -298,6 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <i class="fas fa-exclamation-circle"></i>
                 <span class="count">${details.github.issues}</span>
             </div>
+            ${updateHtml}
         `;
                             githubStatsContainer.innerHTML = githubHtml;
                         }

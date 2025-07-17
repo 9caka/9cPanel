@@ -1,6 +1,6 @@
 {
   "name": "9cpanel",
-  "version": "1.0.0",
+  "version": "1.10.0",
   "description": "Un panel personnalisé pour le dev et le gaming.",
   "main": "main.js",
   "scripts": {
@@ -16,6 +16,7 @@
     "@octokit/rest": "^22.0.0",
     "os-utils": "^0.0.14",
     "rss-parser": "^3.13.0",
+    "semver": "^7.7.2",
     "sqlite3": "^5.1.7",
     "systeminformation": "^5.27.7",
     "tailwindcss": "^3.4.1"

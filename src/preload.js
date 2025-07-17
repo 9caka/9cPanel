@@ -16,4 +16,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   projectAction: (payload) => ipcRenderer.send('project-action', payload),
   onLaunchSuccess: (callback) => ipcRenderer.on('launch-success', (event, ...args) => callback(...args)),
   gitCommand: (payload) => ipcRenderer.invoke('git:command', payload),
+  dockerCommand: (payload) => ipcRenderer.invoke('docker:command', payload),
+  runNpmScript: (payload) => ipcRenderer.send('run-npm-script', payload),
+  dbConnect: (filePath) => ipcRenderer.invoke('db:connect', filePath),
+  dbQuery: (payload) => ipcRenderer.invoke('db:query', payload),
+  dbClose: (filePath) => ipcRenderer.send('db:close', filePath),
+  fetchRss: (url) => ipcRenderer.invoke('fetch-rss', url),
 });

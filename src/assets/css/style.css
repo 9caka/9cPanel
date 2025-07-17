@@ -863,3 +863,269 @@ html[data-theme="light"] .theme-toggle-label .fa-moon {
         transform: translateY(10px);
     }
 }
+
+/* NOUVEAU : Styles pour le widget Docker */
+.docker-container-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.docker-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.2s ease;
+}
+
+.docker-item:hover {
+    background-color: var(--color-bg-primary);
+}
+
+.docker-status {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.docker-status.running {
+    background-color: #10b981;
+    /* Vert */
+}
+
+.docker-status.stopped {
+    background-color: #6b7280;
+    /* Gris */
+}
+
+.docker-name {
+    flex-grow: 1;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.docker-actions button {
+    background: none;
+    border: none;
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+}
+
+.docker-actions button:hover {
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-main);
+}
+
+.docker-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.npm-scripts-container {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border-primary);
+}
+
+.npm-scripts-header {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-tertiary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.npm-scripts-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.npm-script-btn {
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-tertiary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 1px solid var(--color-border-primary);
+}
+
+.npm-script-btn:hover {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+    transform: translateY(-2px);
+}
+
+.db-sidebar-list {
+    overflow-y: auto;
+    border: 1px solid var(--color-border-primary);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+}
+
+.db-table-item {
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.db-table-item:hover {
+    background-color: var(--color-bg-tertiary);
+}
+
+.db-table-item.active {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+#db-results-area table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+#db-results-area th,
+#db-results-area td {
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border-primary);
+}
+
+#db-results-area th {
+    background-color: var(--color-bg-tertiary);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+
+#db-results-area tr:last-child td {
+    border-bottom: none;
+}
+
+#db-results-area tr:hover td {
+    background-color: var(--color-bg-tertiary);
+}
+
+#db-main-area.is-inactive {
+    display: none;
+}
+
+.rss-feed-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.rss-feed-item:hover {
+    background-color: var(--color-bg-tertiary);
+}
+
+.rss-feed-item.active {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.rss-feed-item-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.875rem;
+    flex-grow: 1;
+}
+
+.rss-feed-item-delete {
+    color: var(--color-text-tertiary);
+    background: none;
+    border: none;
+    padding: 0.25rem;
+    margin-left: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.rss-feed-item:hover .rss-feed-item-delete {
+    opacity: 1;
+}
+
+.rss-feed-item.active .rss-feed-item-delete {
+    color: white;
+}
+
+.rss-feed-item-delete:hover {
+    color: #ef4444;
+}
+
+.rss-article-item {
+    padding: 0.75rem;
+    border: 1px solid var(--color-border-primary);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.rss-article-item:hover {
+    border-color: var(--accent-color);
+    background-color: var(--color-bg-tertiary);
+}
+
+.rss-article-title {
+    font-weight: 600;
+    color: var(--color-text-main);
+    display: block; /* Pour que le lien prenne toute la largeur */
+}
+
+.rss-article-snippet {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    margin-top: 0.25rem;
+}
+
+.rss-article-meta {
+    font-size: 0.75rem;
+    color: var(--color-text-tertiary);
+    margin-top: 0.5rem;
+}
+
+.github-stats-container {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border-primary);
+}
+
+.github-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--color-text-tertiary);
+}
+
+.github-stat-item i {
+    font-size: 1rem;
+}
+
+.github-stat-item .count {
+    font-weight: 600;
+    color: var(--color-text-main);
+}

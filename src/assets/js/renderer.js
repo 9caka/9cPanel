@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
             confirmMessage: document.getElementById('confirm-message'),
             confirmOkBtn: document.getElementById('confirm-ok-btn'),
             confirmCancelBtn: document.getElementById('confirm-cancel-btn'),
-            projectSearchInput: document.getElementById('project-search-input')
+            projectSearchInput: document.getElementById('project-search-input'),
         };
 
         const state = {
@@ -1542,6 +1542,8 @@ async function loadAndRenderAchievements(appid) {
                 }
             }
         });
+        
+        loadAndApplySettings();
 
         const updateNotification = document.getElementById('update-notification');
         const updateMessage = document.getElementById('update-message');
@@ -1560,8 +1562,6 @@ async function loadAndRenderAchievements(appid) {
         updateRestartBtn.addEventListener('click', () => {
             window.electronAPI.restartApp();
         });
-
-        loadAndApplySettings();
 
     } catch (error) {
         console.error("Critical error during initialization:", error);

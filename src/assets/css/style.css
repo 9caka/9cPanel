@@ -760,7 +760,6 @@ body {
     top: 50%;
     transform: translateY(-50%);
     color: #f59e0b;
-    /* Jaune pour le soleil/lune */
 }
 
 .theme-toggle-label .fa-sun {
@@ -773,11 +772,11 @@ body {
     opacity: 1;
 }
 
-#theme-toggle:checked+.theme-toggle-label {
+.theme-switcher input:checked + .theme-toggle-label {
     background-color: var(--accent-color);
 }
 
-#theme-toggle:checked+.theme-toggle-label .ball {
+.theme-switcher input:checked + .theme-toggle-label .ball {
     transform: translateX(22px);
 }
 

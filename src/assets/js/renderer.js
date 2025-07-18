@@ -30,10 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
             confirmMessage: document.getElementById('confirm-message'),
             confirmOkBtn: document.getElementById('confirm-ok-btn'),
             confirmCancelBtn: document.getElementById('confirm-cancel-btn'),
-            projectSearchInput: document.getElementById('project-search-input'),
-            updateNotification: document.getElementById('update-notification'),
-            updateMessage: document.getElementById('update-message'),
-            updateRestartBtn: document.getElementById('update-restart-btn'),
+            projectSearchInput: document.getElementById('project-search-input')
         };
 
         const state = {
@@ -1545,6 +1542,10 @@ async function loadAndRenderAchievements(appid) {
                 }
             }
         });
+
+        const updateNotification = document.getElementById('update-notification');
+        const updateMessage = document.getElementById('update-message');
+        const updateRestartBtn = document.getElementById('update-restart-btn');
 
         window.electronAPI.onUpdateAvailable(() => {
             updateNotification.classList.remove('hidden');

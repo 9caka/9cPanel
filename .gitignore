@@ -1,3 +1,6 @@
 /node_modules
 package-lock.json
 /dist
+src/data/projects-dev.json
+src/data/settings.json
+src/data/todos.json

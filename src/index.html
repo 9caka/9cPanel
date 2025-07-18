@@ -51,16 +51,18 @@
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 pt-16">
             <div class="relative mb-8 flex justify-center items-center"><button id="back-btn" class="back-button"><i
                         class="fas fa-arrow-left mr-2"></i> Retour</button>
-                <h1 id="main-title" class="text-3xl font-bold text-main"></h1><button id="edit-mode-btn"
-                    class="absolute right-0 top-1/2 -translate-y-1/2 text-secondary hover:text-accent transition-colors p-2 rounded-md"><i
-                        class="fas fa-pencil-alt"></i></button>
+                <h1 id="main-title" class="text-3xl font-bold text-main"></h1>
+                <div id="main-header-buttons" class="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                    <button id="refresh-steam-btn" class="text-secondary hover:text-accent transition-colors p-2 rounded-md hidden"><i class="fas fa-sync-alt"></i></button>
+                    <button id="edit-mode-btn" class="text-secondary hover:text-accent transition-colors p-2 rounded-md"><i class="fas fa-pencil-alt"></i></button>
+                </div>
             </div>
             <div class="mb-6">
                 <div class="relative">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                         <i class="fas fa-search text-tertiary"></i>
                     </span>
-                    <input type="text" id="project-search-input" class="modal-input w-full !pl-10" placeholder="Rechercher un projet...">
+                    <input type="text" id="project-search-input" class="modal-input w-full !pl-10" placeholder="Rechercher...">
                 </div>
             </div>
             <div id="items-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
@@ -130,7 +132,8 @@
                                     data-tab="snippets">Snippets</button><button class="tool-tab" 
                                     data-tab="docker-manager">Docker</button><button class="tool-tab" 
                                     data-tab="db-viewer">BDD</button><button class="tool-tab" 
-                                    data-tab="rss-reader">RSS</button></div>
+                                    data-tab="rss-reader">RSS</button><button class="tool-tab" 
+                                    data-tab="env-editor">.env</button></div>
                             <div class="relative min-h-[420px]">
                                 <div id="color-converter" class="tool-content pt-6 px-3 space-y-3"><input type="color"
                                         id="color-picker"
@@ -247,6 +250,24 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div id="env-editor" class="tool-content is-inactive pt-6 px-3 flex flex-col h-[420px]">
+                                    <div class="flex-shrink-0 mb-4 flex items-center gap-2">
+                                        <select id="env-project-selector" class="modal-input flex-grow">
+                                            <option value="">Sélectionnez un projet avec un fichier .env</option>
+                                        </select>
+                                        <button id="env-refresh-projects-btn" class="btn-helper !p-2.5" title="Rafraîchir la liste des projets">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                    </div>
+                                    <div id="env-editor-main" class="is-inactive flex-grow flex flex-col gap-4 overflow-hidden">
+                                        <div id="env-variables-list" class="flex-grow overflow-y-auto space-y-2 pr-2">
+                                        </div>
+                                        <div class="flex-shrink-0 flex gap-2">
+                                            <button id="env-add-var-btn" class="btn-secondary w-1/2">Ajouter une variable</button>
+                                            <button id="env-save-btn" class="btn-primary w-1/2">Sauvegarder les changements</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -277,7 +298,7 @@
         </div>
     </div>
 
-    <div id="settings-view" class="view-container is-inactive">
+<div id="settings-view" class="view-container is-inactive">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 pt-16">
             <div class="relative mb-8 flex justify-center items-center">
                 <button id="settings-back-btn" class="back-button"><i class="fas fa-arrow-left mr-2"></i>
@@ -285,6 +306,18 @@
                 <h2 class="text-3xl font-bold text-main">Paramètres</h2>
             </div>
             <div class="max-w-md mx-auto space-y-8">
+                <div class="widget">
+                    <h3 class="widget-header">Application</h3>
+                    <div class="widget-content flex justify-between items-center">
+                        <span class="text-main">Lancer au démarrage de Windows</span>
+                        <div class="theme-switcher">
+                            <input type="checkbox" id="launch-on-startup-toggle" class="hidden">
+                            <label for="launch-on-startup-toggle" class="theme-toggle-label">
+                                <span class="ball"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
                 <div class="widget">
                     <h3 class="widget-header">Thème</h3>
                     <div class="widget-content flex justify-between items-center">
@@ -305,11 +338,27 @@
                     </div>
                 </div>
                 <div class="widget">
+                    <h3 class="widget-header">Éditeur de Thème</h3>
+                    <div id="theme-editor-container" class="widget-content space-y-3">
+                    </div>
+                    <div class="p-4 border-t border-primary">
+                        <button id="reset-theme-btn" class="btn-secondary w-full">Réinitialiser le thème</button>
+                    </div>
+                </div>
+                <div class="widget">
                     <h3 class="widget-header">Intégrations</h3>
                     <div class="widget-content space-y-4">
                         <div>
                             <label for="github-token-input" class="block text-sm font-medium text-secondary mb-1">Jeton d'accès personnel GitHub</label>
                             <input type="password" id="github-token-input" class="modal-input" placeholder="Collez votre jeton ici...">
+                        </div>
+                        <div>
+                            <label for="steam-api-key-input" class="block text-sm font-medium text-secondary mb-1">Clé d'API Steam</label>
+                            <input type="password" id="steam-api-key-input" class="modal-input" placeholder="Collez votre clé d'API ici...">
+                        </div>
+                        <div>
+                            <label for="steam-id-input" class="block text-sm font-medium text-secondary mb-1">SteamID64</label>
+                            <input type="text" id="steam-id-input" class="modal-input" placeholder="Collez votre SteamID64 ici...">
                         </div>
                     </div>
                 </div>
@@ -391,7 +440,19 @@
         </div>
     </div>
 
+    <div id="game-details-modal" class="modal-overlay is-inactive">
+        <div class="bg-secondary p-1 rounded-xl shadow-2xl w-full max-w-5xl border border-secondary flex flex-col h-[90vh] relative">
+            <button id="close-game-details-btn" class="absolute top-4 right-4 text-white hover:text-main transition-colors z-20 bg-black/50 rounded-full w-8 h-8 flex items-center justify-center"><i class="fas fa-times"></i></button>
+            <div id="game-details-content" class="flex-grow overflow-y-auto bg-primary rounded-lg">
+            </div>
+        </div>
+    </div>
     <div id="notification-container" class="fixed bottom-4 right-4 z-[10002] w-80 space-y-3">
+    </div>
+
+    <div id="update-notification" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 bg-secondary p-4 rounded-lg shadow-lg border border-primary flex items-center gap-4 z-[10003]">
+        <span id="update-message"></span>
+        <button id="update-restart-btn" class="btn-primary hidden">Redémarrer et Mettre à Jour</button>
     </div>
 
     <script src="./assets/js/renderer.js"></script>

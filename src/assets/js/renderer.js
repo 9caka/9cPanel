@@ -6,9 +6,7 @@ const hslToRgb = (h, s, l) => { s /= 100; l /= 100; let c = (1 - Math.abs(2 * l 
 
 document.addEventListener('DOMContentLoaded', () => {
     try {
-        console.log('[Init] DOM loaded. Starting application initialization.');
-
-        const dom = {
+       const dom = {
             allViews: document.querySelectorAll('.view-container'),
             allModals: document.querySelectorAll('.modal-overlay'),
             mainContent: document.getElementById('main-content'),
@@ -18,9 +16,11 @@ document.addEventListener('DOMContentLoaded', () => {
             mainTitle: document.getElementById('main-title'),
             itemsContainer: document.getElementById('items-container'),
             editModeBtn: document.getElementById('edit-mode-btn'),
+            refreshSteamBtn: document.getElementById('refresh-steam-btn'),
             editModal: document.getElementById('edit-modal'),
             editForm: document.getElementById('edit-form'),
             iconPickerModal: document.getElementById('icon-picker-modal'),
+            gameDetailsModal: document.getElementById('game-details-modal'),
             settingsBtn: document.getElementById('settings-btn'),
             settingsBackBtn: document.getElementById('settings-back-btn'),
             themeToggle: document.getElementById('theme-toggle'),
@@ -31,56 +31,41 @@ document.addEventListener('DOMContentLoaded', () => {
             confirmOkBtn: document.getElementById('confirm-ok-btn'),
             confirmCancelBtn: document.getElementById('confirm-cancel-btn'),
             projectSearchInput: document.getElementById('project-search-input'),
+            updateNotification: document.getElementById('update-notification'),
+            updateMessage: document.getElementById('update-message'),
+            updateRestartBtn: document.getElementById('update-restart-btn'),
         };
 
         const state = {
             isEditMode: false,
             currentItems: [],
+            currentGames: [],
             currentFilePath: '',
             settings: { theme: 'dark', accentColor: '#2563eb' },
             devToolsInitialized: false,
             settingsInitialized: false,
         };
 
-        function showCustomNotification(message, type = 'success') {
+       function showCustomNotification(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `notification-toast ${type}`;
-
             const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-
-            toast.innerHTML = `
-                <i class="fas ${iconClass}"></i>
-                <span>${message}</span>
-            `;
-
+            toast.innerHTML = `<i class="fas ${iconClass}"></i><span>${message}</span>`;
             dom.notificationContainer.appendChild(toast);
-
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
+            setTimeout(() => { toast.remove(); }, 3000);
         }
 
         function showConfirmationModal(message) {
             return new Promise(resolve => {
                 dom.confirmMessage.textContent = message;
                 dom.confirmModal.classList.remove('is-inactive');
-
-                const handleOk = () => {
-                    cleanup();
-                    resolve(true);
-                };
-
-                const handleCancel = () => {
-                    cleanup();
-                    resolve(false);
-                };
-
+                const handleOk = () => { cleanup(); resolve(true); };
+                const handleCancel = () => { cleanup(); resolve(false); };
                 const cleanup = () => {
                     dom.confirmModal.classList.add('is-inactive');
                     dom.confirmOkBtn.removeEventListener('click', handleOk);
                     dom.confirmCancelBtn.removeEventListener('click', handleCancel);
                 };
-
                 dom.confirmOkBtn.addEventListener('click', handleOk);
                 dom.confirmCancelBtn.addEventListener('click', handleCancel);
             });
@@ -108,17 +93,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const applySettings = () => {
             document.documentElement.dataset.theme = state.settings.theme;
-            document.documentElement.style.setProperty('--accent-color', state.settings.accentColor);
 
+            const themeVars = ['--color-bg-primary', '--color-bg-secondary', '--color-bg-tertiary', '--color-text-main', '--color-text-secondary', '--color-border-primary'];
+            themeVars.forEach(v => document.documentElement.style.removeProperty(v));
+
+            if (state.settings.customTheme) {
+                for (const [key, value] of Object.entries(state.settings.customTheme)) {
+                    document.documentElement.style.setProperty(key, value);
+                }
+            }
+            
+            document.documentElement.style.setProperty('--accent-color', state.settings.accentColor);
             const accentRGB = hexToRgb(state.settings.accentColor);
             document.documentElement.style.setProperty('--accent-color-translucent', `rgba(${accentRGB.r}, ${accentRGB.g}, ${accentRGB.b}, 0.1)`);
 
             const hljsTheme = document.getElementById('hljs-theme');
-            if (state.settings.theme === 'light') {
-                hljsTheme.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css';
-            } else {
-                hljsTheme.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css';
-            }
+            hljsTheme.href = state.settings.theme === 'light' 
+                ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css'
+                : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css';
+
             if (state.settingsInitialized) {
                 dom.themeToggle.checked = state.settings.theme === 'light';
                 document.querySelectorAll('.color-swatch').forEach(swatch => {
@@ -140,9 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        function initSettings() {
+            function initSettings() {
             const accentColors = ['#2563eb', '#8b5cf6', '#db2777', '#f59e0b', '#10b981', '#ef4444'];
-            const githubTokenInput = document.getElementById('github-token-input');
             dom.accentColorPicker.innerHTML = '';
             accentColors.forEach(color => {
                 const swatch = document.createElement('div');
@@ -162,16 +154,94 @@ document.addEventListener('DOMContentLoaded', () => {
                 applySettings();
                 saveSettings();
             });
+            
+                const themeEditorContainer = document.getElementById('theme-editor-container');
+                const resetThemeBtn = document.getElementById('reset-theme-btn');
+                const themeColors = [
+                    { var: '--color-bg-primary', label: 'Fond Principal' },
+                    { var: '--color-bg-secondary', label: 'Fond Secondaire' },
+                    { var: '--color-bg-tertiary', label: 'Fond Tertiaire' },
+                    { var: '--color-text-main', label: 'Texte Principal' },
+                    { var: '--color-text-secondary', label: 'Texte Secondaire' },
+                    { var: '--color-border-primary', label: 'Bordure' },
+                ];
 
-            if (state.settings.githubToken) {
-                githubTokenInput.value = state.settings.githubToken;
-            }
+            const githubTokenInput = document.getElementById('github-token-input');
+            const steamApiKeyInput = document.getElementById('steam-api-key-input');
+            const steamIdInput = document.getElementById('steam-id-input');
+            const launchOnStartupToggle = document.getElementById('launch-on-startup-toggle');
+
+            if (state.settings.githubToken) githubTokenInput.value = state.settings.githubToken;
+            if (state.settings.steamApiKey) steamApiKeyInput.value = state.settings.steamApiKey;
+            if (state.settings.steamId) steamIdInput.value = state.settings.steamId;
+            if (!state.settings.customTheme) { state.settings.customTheme = {};}
+
             githubTokenInput.addEventListener('change', () => {
                 state.settings.githubToken = githubTokenInput.value;
                 saveSettings();
                 showCustomNotification('Jeton GitHub sauvegardé.');
             });
+            steamApiKeyInput.addEventListener('change', () => {
+                state.settings.steamApiKey = steamApiKeyInput.value;
+                saveSettings();
+                showCustomNotification('Clé d\'API Steam sauvegardée.');
+            });
+            steamIdInput.addEventListener('change', () => {
+                state.settings.steamId = steamIdInput.value;
+                saveSettings();
+                showCustomNotification('SteamID sauvegardé.');
+            });
 
+                window.electronAPI.getLaunchOnStartup().then(isEnabled => {
+                    launchOnStartupToggle.checked = isEnabled;
+                });
+
+                launchOnStartupToggle.addEventListener('change', () => {
+                    const shouldLaunch = launchOnStartupToggle.checked;
+                    window.electronAPI.setLaunchOnStartup(shouldLaunch);
+                });
+
+                function buildThemeEditor() {
+                    themeEditorContainer.innerHTML = '';
+                    themeColors.forEach(({ var: cssVar, label }) => {
+                        const row = document.createElement('div');
+                        row.className = 'theme-editor-row';
+
+                        const labelEl = document.createElement('span');
+                        labelEl.className = 'theme-editor-label';
+                        labelEl.textContent = label;
+
+                        const inputEl = document.createElement('input');
+                        inputEl.type = 'color';
+                        inputEl.className = 'theme-editor-input';
+
+                        const savedColor = state.settings.customTheme?.[cssVar];
+                        const currentColor = getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim();
+                        inputEl.value = savedColor || currentColor;
+
+                        inputEl.addEventListener('input', () => {
+                            const newColor = inputEl.value;
+                            if (!state.settings.customTheme) state.settings.customTheme = {};
+                            document.documentElement.style.setProperty(cssVar, newColor);
+                            state.settings.customTheme[cssVar] = newColor;
+                            saveSettings();
+                        });
+
+                        row.appendChild(labelEl);
+                        row.appendChild(inputEl);
+                        themeEditorContainer.appendChild(row);
+                    });
+                }
+
+                resetThemeBtn.addEventListener('click', () => {
+                    state.settings.customTheme = {};
+                    saveSettings();
+                    applySettings();
+                    buildThemeEditor();
+                    showCustomNotification('Thème réinitialisé.');
+                });
+
+            buildThemeEditor();    
             state.settingsInitialized = true;
             applySettings();
         }
@@ -204,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (itemsToRender.length === 0) {
                 dom.itemsContainer.innerHTML = `<p class="text-center col-span-full text-tertiary">Aucun projet trouvé.</p>`;
                 if (state.isEditMode) {
-                    const addItemCard = document.createElement('div');
+                     const addItemCard = document.createElement('div');
                     addItemCard.className = 'border-2 border-dashed border-secondary hover:border-accent hover:text-accent transition-all duration-300 rounded-xl flex justify-center items-center text-tertiary cursor-pointer min-h-[250px]';
                     addItemCard.innerHTML = `<div class="text-center"><i class="fas fa-plus fa-2x mb-2"></i><p>Ajouter un item</p></div>`;
                     addItemCard.addEventListener('click', () => openEditModal());
@@ -218,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 itemCard.className = 'item-card group';
                 itemCard.dataset.index = originalIndex;
                 if (state.isEditMode) itemCard.draggable = true;
-
+                
                 itemCard.innerHTML = `
                     <div class="card-controls"><button class="card-control-btn edit" title="Modifier"><i class="fas fa-pencil-alt"></i></button><button class="card-control-btn delete" title="Supprimer"><i class="fas fa-trash"></i></button></div>
                     <div class="flex-grow pointer-events-none">
@@ -274,41 +344,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         if (actionsContainer) {
                             let actionsHtml = `<div class="card-actions"><button class="action-btn" data-action="open-explorer" title="Ouvrir dans l'explorateur"><i class="fas fa-folder-open"></i></button><button class="action-btn" data-action="open-terminal" title="Ouvrir un terminal"><i class="fas fa-terminal"></i></button>`;
-                            if (details.branch) {
+                            if(details.branch) {
                                 actionsHtml += `<button class="action-btn git-btn" data-action="git-pull" title="Git Pull"><span class="btn-text"><i class="fas fa-arrow-down"></i></span><i class="fas fa-spinner spinner"></i></button><button class="action-btn git-btn" data-action="git-push" title="Git Push"><span class="btn-text"><i class="fas fa-arrow-up"></i></span><i class="fas fa-spinner spinner"></i></button>`;
                             }
                             actionsHtml += `</div>`;
                             actionsContainer.innerHTML = actionsHtml;
                         }
                         if (npmScriptsContainer && details.scripts) {
-                            const scriptsHtml = Object.keys(details.scripts).map(script =>
+                            const scriptsHtml = Object.keys(details.scripts).map(script => 
                                 `<button class="npm-script-btn" data-script="${script}" title="npm run ${script}">${script}</button>`
                             ).join('');
-                            if (scriptsHtml) {
+                            if(scriptsHtml) {
                                 npmScriptsContainer.innerHTML = `<div class="npm-scripts-header">Scripts NPM</div><div class="npm-scripts-list">${scriptsHtml}</div>`;
                             }
                         }
                         if (githubStatsContainer && details.github) {
                             let updateHtml = '';
                             if (details.github.update && details.github.update.available) {
-                                updateHtml = `
-                <div class="github-stat-item" title="Mise à jour disponible : ${details.github.update.version}">
-                    <i class="fas fa-arrow-alt-circle-up update-available"></i>
-                </div>
-            `;
+                                updateHtml = `<div class="github-stat-item" title="Mise à jour disponible : ${details.github.update.version}"><i class="fas fa-arrow-alt-circle-up update-available"></i></div>`;
                             }
-
-                            let githubHtml = `
-            <div class="github-stat-item" title="Pull Requests Ouvertes">
-                <i class="fas fa-code-pull-request"></i>
-                <span class="count">${details.github.prs}</span>
-            </div>
-            <div class="github-stat-item" title="Issues Ouvertes">
-                <i class="fas fa-exclamation-circle"></i>
-                <span class="count">${details.github.issues}</span>
-            </div>
-            ${updateHtml}
-        `;
+                            let githubHtml = `<div class="github-stat-item" title="Pull Requests Ouvertes"><i class="fas fa-code-pull-request"></i><span class="count">${details.github.prs}</span></div><div class="github-stat-item" title="Issues Ouvertes"><i class="fas fa-exclamation-circle"></i><span class="count">${details.github.issues}</span></div>${updateHtml}`;
                             githubStatsContainer.innerHTML = githubHtml;
                         }
                     });
@@ -489,31 +544,23 @@ document.addEventListener('DOMContentLoaded', () => {
             if (state.devToolsInitialized) return;
             console.log('[Init] Initializing dev tools for the first time...');
             try {
-                // Moniteur Système
                 window.electronAPI.onSystemStats(stats => {
-                    // Fonction pour formater les octets en unités lisibles
-                    const formatBytes = (bytes) => {
-                        if (bytes === 0) return '0 B/s';
-                        const k = 1024;
-                        const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
-                        const i = Math.floor(Math.log(bytes) / Math.log(k));
-                        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-                    };
-
-                    // CPU
-                    document.getElementById('cpu-bar').style.width = `${stats.cpu.toFixed(1)}%`;
-                    document.getElementById('cpu-percent').textContent = `${stats.cpu.toFixed(1)}%`;
-                    // RAM
-                    document.getElementById('mem-bar').style.width = `${stats.mem.toFixed(1)}%`;
-                    document.getElementById('mem-percent').textContent = `${stats.mem.toFixed(1)}%`;
-                    // Disque
-                    document.getElementById('disk-bar').style.width = `${stats.disk.toFixed(1)}%`;
-                    document.getElementById('disk-percent').textContent = `${stats.disk.toFixed(1)}%`;
-                    // Réseau
-                    document.getElementById('net-download').textContent = formatBytes(stats.net.download);
-                    document.getElementById('net-upload').textContent = formatBytes(stats.net.upload);
-                });
-                // To-Do List
+                const formatBytes = (bytes) => {
+                    if (bytes === 0) return '0 B/s';
+                    const k = 1024;
+                    const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+                    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+                };
+                document.getElementById('cpu-bar').style.width = `${stats.cpu.toFixed(1)}%`;
+                document.getElementById('cpu-percent').textContent = `${stats.cpu.toFixed(1)}%`;
+                document.getElementById('mem-bar').style.width = `${stats.mem.toFixed(1)}%`;
+                document.getElementById('mem-percent').textContent = `${stats.mem.toFixed(1)}%`;
+                document.getElementById('disk-bar').style.width = `${stats.disk.toFixed(1)}%`;
+                document.getElementById('disk-percent').textContent = `${stats.disk.toFixed(1)}%`;
+                document.getElementById('net-download').textContent = formatBytes(stats.net.download);
+                document.getElementById('net-upload').textContent = formatBytes(stats.net.upload);
+            });
                 const todoList = document.getElementById('todo-list');
                 const newTodoInput = document.getElementById('new-todo-input');
                 const addTodoBtn = document.getElementById('add-todo-btn');
@@ -568,7 +615,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 newTodoInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTodo(); });
                 loadTodos();
 
-                // Boîte à Outils
                 const tabs = document.querySelectorAll('.tool-tab');
                 const contents = document.querySelectorAll('.tool-content');
                 tabs.forEach(tab => {
@@ -585,7 +631,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 });
 
-                // Utilitaires
                 const colorPicker = document.getElementById('color-picker'); const hexInput = document.getElementById('hex-input'); const rgbInput = document.getElementById('rgb-input'); const hslInput = document.getElementById('hsl-input');
                 const updateColor = (source, value) => { let color; try { if (source === 'picker' || source === 'hex') { const hex = value.startsWith('#') ? value : `#${value}`; if (!/^#([A-F0-9]{3}){1,2}$/i.test(hex)) return; color = hexToRgb(hex); } else if (source === 'rgb') { const match = value.match(/(\d+),\s*(\d+),\s*(\d+)/); if (!match) return; color = { r: parseInt(match[1]), g: parseInt(match[2]), b: parseInt(match[3]) }; } else if (source === 'hsl') { const match = value.match(/(\d+),\s*(\d+)%?,\s*(\d+)%?/); if (!match) return; color = hslToRgb(parseInt(match[1]), parseInt(match[2]), parseInt(match[3])); } if (source !== 'picker') colorPicker.value = rgbToHex(color.r, color.g, color.b); if (source !== 'hex') hexInput.value = rgbToHex(color.r, color.g, color.b); if (source !== 'rgb') rgbInput.value = `${color.r}, ${color.g}, ${color.b}`; const hsl = rgbToHsl(color.r, color.g, color.b); if (source !== 'hsl') hslInput.value = `${hsl.h}, ${hsl.s}%, ${hsl.l}%`; } catch (e) { } };
                 colorPicker.addEventListener('input', (e) => updateColor('picker', e.target.value)); hexInput.addEventListener('input', (e) => updateColor('hex', e.target.value)); rgbInput.addEventListener('input', (e) => updateColor('rgb', e.target.value)); hslInput.addEventListener('input', (e) => updateColor('hsl', e.target.value)); updateColor('picker', '#2563eb');
@@ -698,10 +743,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     clearTimeout(scratchpadTimeout);
                     scratchpadTimeout = setTimeout(saveScratchpad, 1500);
                 });
+
                 loadScratchpad();
                 initDockerManager();
                 initDatabaseWidget();
                 initRssWidget();
+                initEnvEditor();
+
                 state.devToolsInitialized = true;
                 console.log('[Init] Dev tools initialized successfully.');
             } catch (error) {
@@ -909,157 +957,456 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function initRssWidget() {
-    const feedsListEl = document.getElementById('rss-feeds-list');
-    const newFeedUrlInput = document.getElementById('rss-new-feed-url');
-    const addFeedBtn = document.getElementById('rss-add-feed-btn');
-    const articlesListEl = document.getElementById('rss-articles-list');
-    const currentFeedTitleEl = document.getElementById('rss-current-feed-title');
+            const feedsListEl = document.getElementById('rss-feeds-list');
+            const newFeedUrlInput = document.getElementById('rss-new-feed-url');
+            const addFeedBtn = document.getElementById('rss-add-feed-btn');
+            const articlesListEl = document.getElementById('rss-articles-list');
+            const currentFeedTitleEl = document.getElementById('rss-current-feed-title');
 
-    const FEEDS_FILE_PATH = 'src/data/rss-feeds.json';
-    let feeds = [];
-    let activeFeedUrl = null;
+            const FEEDS_FILE_PATH = 'src/data/rss-feeds.json';
+            let feeds = [];
+            let activeFeedUrl = null;
 
-    const saveFeeds = () => {
-        window.electronAPI.saveItems({ filePath: FEEDS_FILE_PATH, data: feeds });
-    };
+            const saveFeeds = () => {
+                window.electronAPI.saveItems({ filePath: FEEDS_FILE_PATH, data: feeds });
+            };
 
-    const renderFeeds = () => {
-        feedsListEl.innerHTML = '';
-        feeds.forEach(feed => {
-            const item = document.createElement('div');
-            item.className = 'rss-feed-item';
-            item.dataset.url = feed.url;
-            if (feed.url === activeFeedUrl) {
-                item.classList.add('active');
-            }
-            item.innerHTML = `
+            const renderFeeds = () => {
+                feedsListEl.innerHTML = '';
+                feeds.forEach(feed => {
+                    const item = document.createElement('div');
+                    item.className = 'rss-feed-item';
+                    item.dataset.url = feed.url;
+                    if (feed.url === activeFeedUrl) {
+                        item.classList.add('active');
+                    }
+                    item.innerHTML = `
                 <span class="rss-feed-item-name" title="${feed.url}">${feed.title || feed.url}</span>
                 <button class="rss-feed-item-delete" title="Supprimer le flux"><i class="fas fa-trash-alt"></i></button>
             `;
-            feedsListEl.appendChild(item);
-        });
-    };
+                    feedsListEl.appendChild(item);
+                });
+            };
 
-    const renderArticles = (items) => {
-        articlesListEl.innerHTML = '';
-        if (!items || items.length === 0) {
-            articlesListEl.innerHTML = '<p class="text-tertiary text-center pt-10">Aucun article dans ce flux.</p>';
-            return;
-        }
-        items.forEach(item => {
-            const articleEl = document.createElement('div');
-            articleEl.className = 'rss-article-item';
-            const snippet = item.contentSnippet ? item.contentSnippet.substring(0, 100) + '...' : 'Pas de description.';
-            const pubDate = item.pubDate ? new Date(item.pubDate).toLocaleDateString() : 'Date inconnue';
-            
-            articleEl.innerHTML = `
+            const renderArticles = (items) => {
+                articlesListEl.innerHTML = '';
+                if (!items || items.length === 0) {
+                    articlesListEl.innerHTML = '<p class="text-tertiary text-center pt-10">Aucun article dans ce flux.</p>';
+                    return;
+                }
+                items.forEach(item => {
+                    const articleEl = document.createElement('div');
+                    articleEl.className = 'rss-article-item';
+                    const snippet = item.contentSnippet ? item.contentSnippet.substring(0, 100) + '...' : 'Pas de description.';
+                    const pubDate = item.pubDate ? new Date(item.pubDate).toLocaleDateString() : 'Date inconnue';
+
+                    articleEl.innerHTML = `
                 <a href="#" data-link="${item.link}" class="rss-article-title">${item.title}</a>
                 <p class="rss-article-snippet">${snippet}</p>
                 <p class="rss-article-meta">${pubDate}</p>
             `;
-            articlesListEl.appendChild(articleEl);
-        });
-    };
+                    articlesListEl.appendChild(articleEl);
+                });
+            };
 
-    const displayFeedContent = async (url) => {
-        activeFeedUrl = url;
-        const feed = feeds.find(f => f.url === url);
-        currentFeedTitleEl.textContent = feed ? feed.title : 'Chargement...';
-        articlesListEl.innerHTML = '<p class="text-tertiary text-center pt-10">Chargement des articles...</p>';
-        renderFeeds();
+            const displayFeedContent = async (url) => {
+                activeFeedUrl = url;
+                const feed = feeds.find(f => f.url === url);
+                currentFeedTitleEl.textContent = feed ? feed.title : 'Chargement...';
+                articlesListEl.innerHTML = '<p class="text-tertiary text-center pt-10">Chargement des articles...</p>';
+                renderFeeds();
 
-        try {
-            const result = await window.electronAPI.fetchRss(url);
-            if (result.success) {
-                if (feed && !feed.title) {
-                    feed.title = result.feed.title;
+                try {
+                    const result = await window.electronAPI.fetchRss(url);
+                    if (result.success) {
+                        if (feed && !feed.title) {
+                            feed.title = result.feed.title;
+                            saveFeeds();
+                            renderFeeds();
+                        }
+                        currentFeedTitleEl.textContent = result.feed.title;
+                        renderArticles(result.feed.items);
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    articlesListEl.innerHTML = `<p class="text-red-400 text-center pt-10">Erreur: ${error.message}</p>`;
+                }
+            };
+
+            const addFeed = async () => {
+                const url = newFeedUrlInput.value.trim();
+                if (!url || feeds.some(f => f.url === url)) {
+                    showCustomNotification('URL invalide ou déjà existante.', 'error');
+                    return;
+                }
+
+                try {
+                    const result = await window.electronAPI.fetchRss(url);
+                    if (result.success) {
+                        feeds.push({ url: url, title: result.feed.title });
+                        newFeedUrlInput.value = '';
+                        saveFeeds();
+                        renderFeeds();
+                        showCustomNotification('Flux ajouté avec succès !');
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    showCustomNotification(`Impossible d'ajouter le flux: ${error.message}`, 'error');
+                }
+            };
+
+            addFeedBtn.addEventListener('click', addFeed);
+            newFeedUrlInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addFeed();
+            });
+
+            feedsListEl.addEventListener('click', (e) => {
+                const item = e.target.closest('.rss-feed-item');
+                if (!item) return;
+
+                if (e.target.closest('.rss-feed-item-delete')) {
+                    const urlToDelete = item.dataset.url;
+                    feeds = feeds.filter(f => f.url !== urlToDelete);
                     saveFeeds();
                     renderFeeds();
+                    if (activeFeedUrl === urlToDelete) {
+                        articlesListEl.innerHTML = '<p class="text-tertiary text-center pt-10">Les articles apparaîtront ici.</p>';
+                        currentFeedTitleEl.textContent = 'Sélectionnez un flux';
+                        activeFeedUrl = null;
+                    }
+                } else {
+                    displayFeedContent(item.dataset.url);
                 }
-                currentFeedTitleEl.textContent = result.feed.title;
-                renderArticles(result.feed.items);
-            } else {
-                throw new Error(result.error);
-            }
-        } catch (error) {
-            articlesListEl.innerHTML = `<p class="text-red-400 text-center pt-10">Erreur: ${error.message}</p>`;
-        }
-    };
+            });
 
-    const addFeed = async () => {
-        const url = newFeedUrlInput.value.trim();
-        if (!url || feeds.some(f => f.url === url)) {
-            showCustomNotification('URL invalide ou déjà existante.', 'error');
-            return;
-        }
+            articlesListEl.addEventListener('click', (e) => {
+                const link = e.target.closest('a[data-link]');
+                if (link) {
+                    e.preventDefault();
+                    window.electronAPI.openExternalLink(link.dataset.link);
+                }
+            });
 
-        try {
-            const result = await window.electronAPI.fetchRss(url);
-            if (result.success) {
-                feeds.push({ url: url, title: result.feed.title });
-                newFeedUrlInput.value = '';
-                saveFeeds();
+            const loadFeeds = async () => {
+                feeds = await window.electronAPI.readFile(FEEDS_FILE_PATH) || [];
                 renderFeeds();
-                showCustomNotification('Flux ajouté avec succès !');
-            } else {
-                throw new Error(result.error);
-            }
-        } catch (error) {
-            showCustomNotification(`Impossible d'ajouter le flux: ${error.message}`, 'error');
+            };
+
+            loadFeeds();
         }
-    };
 
-    addFeedBtn.addEventListener('click', addFeed);
-    newFeedUrlInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') addFeed();
-    });
+        function initEnvEditor() {
+            const projectSelector = document.getElementById('env-project-selector');
+            const refreshProjectsBtn = document.getElementById('env-refresh-projects-btn');
+            const editorMain = document.getElementById('env-editor-main');
+            const variablesList = document.getElementById('env-variables-list');
+            const addVarBtn = document.getElementById('env-add-var-btn');
+            const saveBtn = document.getElementById('env-save-btn');
 
-    feedsListEl.addEventListener('click', (e) => {
-        const item = e.target.closest('.rss-feed-item');
-        if (!item) return;
+            let projects = [];
+            let currentProjectPath = null;
 
-        if (e.target.closest('.rss-feed-item-delete')) {
-            const urlToDelete = item.dataset.url;
-            feeds = feeds.filter(f => f.url !== urlToDelete);
-            saveFeeds();
-            renderFeeds();
-            if (activeFeedUrl === urlToDelete) {
-                articlesListEl.innerHTML = '<p class="text-tertiary text-center pt-10">Les articles apparaîtront ici.</p>';
-                currentFeedTitleEl.textContent = 'Sélectionnez un flux';
-                activeFeedUrl = null;
+            const renderVariables = (data) => {
+                variablesList.innerHTML = '';
+                for (const key in data) {
+                    addVariableRow(key, data[key]);
+                }
+            };
+
+            const addVariableRow = (key = '', value = '') => {
+                const row = document.createElement('div');
+                row.className = 'env-variable-row';
+                row.innerHTML = `
+            <input type="text" class="modal-input env-key-input" placeholder="KEY" value="${key}">
+            <input type="text" class="modal-input env-value-input" placeholder="VALUE" value="${value}">
+            <button class="command-item-btn delete" title="Supprimer"><i class="fas fa-trash"></i></button>
+        `;
+                row.querySelector('.delete').addEventListener('click', () => row.remove());
+                variablesList.appendChild(row);
+            };
+
+            projectSelector.addEventListener('change', async () => {
+                currentProjectPath = projectSelector.value;
+                if (!currentProjectPath) {
+                    editorMain.classList.add('is-inactive');
+                    return;
+                }
+
+                try {
+                    const result = await window.electronAPI.envRead(currentProjectPath);
+                    if (result.success) {
+                        renderVariables(result.data);
+                        editorMain.classList.remove('is-inactive');
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    showCustomNotification(`Erreur de lecture du fichier .env: ${error.message}`, 'error');
+                    editorMain.classList.add('is-inactive');
+                }
+            });
+
+            addVarBtn.addEventListener('click', () => addVariableRow());
+
+            saveBtn.addEventListener('click', async () => {
+                if (!currentProjectPath) return;
+
+                const data = {};
+                const rows = variablesList.querySelectorAll('.env-variable-row');
+                rows.forEach(row => {
+                    const key = row.querySelector('.env-key-input').value.trim();
+                    const value = row.querySelector('.env-value-input').value.trim();
+                    if (key) {
+                        data[key] = value;
+                    }
+                });
+
+                try {
+                    const result = await window.electronAPI.envSave({ projectPath: currentProjectPath, data });
+                    if (result.success) {
+                        showCustomNotification('Fichier .env sauvegardé avec succès !');
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    showCustomNotification(`Erreur de sauvegarde: ${error.message}`, 'error');
+                }
+            });
+
+            const loadProjects = async () => {
+                try {
+                    const result = await window.electronAPI.envGetProjects();
+                    if (result.success) {
+                        projects = result.projects;
+                        projectSelector.innerHTML = '';
+
+                        if (projects.length > 0) {
+                            projectSelector.disabled = false;
+                            const placeholder = document.createElement('option');
+                            placeholder.value = "";
+                            placeholder.textContent = "Sélectionnez un projet...";
+                            projectSelector.appendChild(placeholder);
+
+                            projects.forEach(p => {
+                                const option = document.createElement('option');
+                                option.value = p.path;
+                                option.textContent = p.name;
+                                projectSelector.appendChild(option);
+                            });
+                        } else {
+                            projectSelector.disabled = true;
+                            const option = document.createElement('option');
+                            option.value = "";
+                            option.textContent = "Aucun projet avec un .env trouvé";
+                            projectSelector.appendChild(option);
+                        }
+                    } else {
+                        throw new Error(result.error);
+                    }
+                } catch (error) {
+                    console.error("Erreur de chargement des projets pour l'éditeur .env", error);
+                    projectSelector.disabled = true;
+                    projectSelector.innerHTML = '<option value="">Erreur de chargement</option>';
+                }
+            };
+
+            refreshProjectsBtn.addEventListener('click', () => {
+                loadProjects();
+                showCustomNotification("Liste des projets rafraîchie.");
+            });
+
+            loadProjects();
+        }
+
+    async function loadSteamGames() {
+            dom.mainTitle.textContent = 'Ma Bibliothèque Steam';
+            dom.editModeBtn.style.display = 'none';
+            dom.refreshSteamBtn.style.display = 'block';
+            dom.itemsContainer.innerHTML = `<p class="text-center col-span-full text-tertiary">Chargement de vos jeux Steam...</p>`;
+
+            try {
+                const [ownedGamesResult, installedAppsResult] = await Promise.all([
+                    window.electronAPI.steamGetOwnedGames(),
+                    window.electronAPI.steamGetInstalledApps()
+                ]);
+
+                if (!ownedGamesResult.success) throw new Error(ownedGamesResult.error);
+                
+                const installedAppIds = installedAppsResult.success ? installedAppsResult.appids : [];
+                
+                state.currentGames = ownedGamesResult.games.map(game => ({
+                    ...game,
+                    is_installed: installedAppIds.includes(String(game.appid))
+                }));
+
+                renderSteamGames();
+
+            } catch (error) {
+                state.currentGames = [];
+                dom.itemsContainer.innerHTML = `<p class="text-center col-span-full text-red-400">Erreur: ${error.message}<br>Veuillez configurer votre clé d'API et votre SteamID dans les paramètres, et assurez-vous que votre profil est public.</p>`;
             }
+        }
+
+       function renderSteamGames() {
+            if (!state.currentGames) return;
+
+            const searchTerm = dom.projectSearchInput.value.toLowerCase();
+            const gamesToRender = state.currentGames.filter(game => game && game.name && game.name.toLowerCase().includes(searchTerm));
+            
+            gamesToRender.sort((a, b) => b.playtime_forever - a.playtime_forever);
+
+            dom.itemsContainer.innerHTML = '';
+            if (gamesToRender.length === 0) {
+                dom.itemsContainer.innerHTML = `<p class="text-center col-span-full text-tertiary">${searchTerm ? 'Aucun jeu ne correspond à votre recherche.' : 'Aucun jeu trouvé.'}</p>`;
+                return;
+            }
+
+            gamesToRender.forEach(game => {
+                const card = document.createElement('div');
+                card.className = `game-card ${game.is_installed ? 'is-installed' : 'not-installed'}`;
+                card.dataset.appid = game.appid;
+                const playtimeHours = game.playtime_forever ? (game.playtime_forever / 60).toFixed(1) : '0.0';
+
+                card.innerHTML = `
+                    <div class="game-card-banner" style="background-image: url('${game.banner_url}')">
+                        ${game.is_installed ? '<div class="installed-badge">Installé</div>' : ''}
+                    </div>
+                    <div class="game-card-content">
+                        <h3 class="game-card-title">${game.name}</h3>
+                        <p class="game-card-playtime">${playtimeHours} heures de jeu</p>
+                        <button class="game-card-launch-btn" data-appid="${game.appid}">Lancer le jeu</button>
+                    </div>
+                `;
+                dom.itemsContainer.appendChild(card);
+            });
+        }
+
+async function openGameDetailsModal(appid) {
+    const modal = document.getElementById('game-details-modal');
+    const contentEl = document.getElementById('game-details-content');
+    
+    modal.classList.remove('is-inactive');
+    contentEl.innerHTML = '<p class="text-center text-tertiary p-10">Chargement des détails...</p>';
+
+    try {
+        const result = await window.electronAPI.steamGetGameDetails(appid);
+        if (result.success) {
+            const details = result.details;
+            const gameData = state.currentGames.find(g => g.appid == appid);
+            const playtimeHours = (gameData?.playtime_forever / 60 || 0).toFixed(1);
+
+            const genres = details.genres ? details.genres.map(g => `<span class="game-details-tag">${g.description}</span>`).join('') : '';
+            const categories = details.categories ? details.categories.map(c => `<span class="game-details-tag">${c.description}</span>`).join('') : '';
+            const screenshots = details.screenshots ? details.screenshots.slice(0, 4).map(s => `<img src="${s.path_thumbnail}" alt="Screenshot">`).join('') : '';
+
+            contentEl.innerHTML = `
+                <div class="game-details-header">
+                    <div class="game-details-background" style="background-image: url('${details.background_raw || details.header_image}')"></div>
+                    <div class="game-details-header-content">
+                        <img src="${details.header_image}" class="game-details-logo">
+                        <div class="game-details-title-section">
+                            <h1>${details.name}</h1>
+                            <p>${details.release_date ? details.release_date.date : ''} - ${details.platforms.windows ? 'PC (Windows)' : ''}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-details-body">
+                    <div class="game-details-left">
+                        <h3 class="game-details-section-title">Vue d'ensemble</h3>
+                        <div class="game-details-description">${details.detailed_description}</div>
+                        <div class="game-details-screenshots">${screenshots}</div>
+                        <h3 id="achievements-title" class="game-details-section-title mt-6">Succès</h3>
+                        <div id="game-details-achievements-container" class="game-details-achievements">
+                            <p class="text-tertiary">Chargement des succès...</p>
+                        </div>
+                    </div>
+                    <div class="game-details-right">
+                        <h3 class="game-details-section-title">Propriétés</h3>
+                        <div class="game-details-properties">
+                            <div class="prop-item"><span class="prop-key">Développeur</span><span class="prop-value">${details.developers ? details.developers.join(', ') : 'N/A'}</span></div>
+                            <div class="prop-item"><span class="prop-key">Éditeur</span><span class="prop-value">${details.publishers ? details.publishers.join(', ') : 'N/A'}</span></div>
+                            <div class="prop-item"><span class="prop-key">Temps de jeu</span><span class="prop-value">${playtimeHours} heures</span></div>
+                        </div>
+                        <h3 class="game-details-section-title mt-6">Genres</h3>
+                        <div class="game-details-tags">${genres}</div>
+                        <h3 class="game-details-section-title mt-6">Fonctionnalités</h3>
+                        <div class="game-details-tags">${categories}</div>
+                    </div>
+                </div>
+
+                <div class="game-details-footer">
+                    <div class="flex items-center gap-3">
+                        <button class="game-footer-btn" data-link="https://store.steampowered.com/app/${appid}">Page Steam</button>
+                        <button class="game-footer-btn" data-link="https://steamcommunity.com/app/${appid}">Communauté</button>
+                        <button id="scroll-to-achievements-btn" class="game-footer-btn">Succès</button>
+                    </div>
+                    <button class="btn-primary !py-3 !px-6 game-card-launch-btn game-footer-play-btn" data-appid="${appid}"><i class="fas fa-play mr-2"></i> Jouer</button>
+                </div>
+            `;
+
+            loadAndRenderAchievements(appid);
+
+            contentEl.querySelectorAll('[data-link]').forEach(link => {
+                link.addEventListener('click', () => window.electronAPI.openExternalLink(link.dataset.link));
+            });
+            contentEl.querySelector('.game-card-launch-btn').addEventListener('click', (e) => {
+                const appId = e.currentTarget.dataset.appid;
+                if (appId) window.electronAPI.steamLaunchGame(appId);
+            });
+            contentEl.querySelector('#scroll-to-achievements-btn').addEventListener('click', () => {
+                document.getElementById('achievements-title').scrollIntoView({ behavior: 'smooth' });
+            });
+
         } else {
-            displayFeedContent(item.dataset.url);
+            throw new Error(result.error);
         }
-    });
+    } catch (error) {
+        contentEl.innerHTML = `<p class="text-center text-red-400 p-10">Impossible de charger les détails : ${error.message}</p>`;
+    }
+}
 
-    articlesListEl.addEventListener('click', (e) => {
-        const link = e.target.closest('a[data-link]');
-        if (link) {
-            e.preventDefault();
-            window.electronAPI.openExternalLink(link.dataset.link);
+async function loadAndRenderAchievements(appid) {
+    const container = document.getElementById('game-details-achievements-container');
+    try {
+        const result = await window.electronAPI.steamGetPlayerAchievements(appid);
+        if (result.success && result.achievements.length > 0) {
+            container.innerHTML = '';
+            result.achievements.forEach(ach => {
+                const item = document.createElement('div');
+                item.className = `achievement-item ${ach.unlocked ? 'unlocked' : 'locked'}`;
+                item.innerHTML = `
+                    <img src="${ach.icon}" class="achievement-icon" alt="${ach.name}">
+                    <div class="achievement-details">
+                        <h4>${ach.name}</h4>
+                        <p>${ach.description || 'Succès secret'}</p>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        } else {
+            container.innerHTML = `<p class="text-tertiary">${result.error || 'Ce jeu n\'a pas de succès.'}</p>`;
         }
-    });
-
-    const loadFeeds = async () => {
-        feeds = await window.electronAPI.readFile(FEEDS_FILE_PATH) || [];
-        renderFeeds();
-    };
-
-    loadFeeds();
+    } catch (error) {
+        container.innerHTML = `<p class="text-red-400">Erreur de chargement des succès.</p>`;
+    }
 }
 
         document.getElementById('min-btn').addEventListener('click', () => window.electronAPI.minimizeWindow());
         document.getElementById('max-btn').addEventListener('click', () => window.electronAPI.maximizeWindow());
         document.getElementById('close-btn').addEventListener('click', () => window.electronAPI.closeWindow());
 
-        document.querySelectorAll('.welcome-btn').forEach(button => {
+         document.querySelectorAll('.welcome-btn').forEach(button => {
             button.addEventListener('click', (event) => {
                 createRipple(event);
                 setTimeout(() => {
                     if (button.id === 'dev-btn') {
                         showView(dom.mainContent);
                         loadItems('src/data/projects-dev.json', 'Mes Projets de Développement');
+                        dom.editModeBtn.style.display = 'block';
+                        dom.refreshSteamBtn.style.display = 'none';
                     } else if (button.id === 'devtools-btn') {
                         showView(dom.devtoolsView);
                         if (!state.devToolsInitialized) {
@@ -1067,7 +1414,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     } else if (button.id === 'gaming-btn') {
                         showView(dom.mainContent);
-                        loadItems('src/data/projects-gaming.json', 'Ma Ludothèque');
+                        loadSteamGames();
                     }
                 }, 250);
             });
@@ -1075,11 +1422,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('back-btn').addEventListener('click', () => showView(dom.welcomeScreen));
         document.getElementById('devtools-back-btn').addEventListener('click', () => showView(dom.welcomeScreen));
-
         dom.settingsBtn.addEventListener('click', () => showView(dom.settingsView));
         dom.settingsBackBtn.addEventListener('click', () => showView(dom.welcomeScreen));
-
         dom.editModeBtn.addEventListener('click', toggleEditMode);
+        dom.refreshSteamBtn.addEventListener('click', loadSteamGames);
+        document.getElementById('close-game-details-btn').addEventListener('click', () => {
+            dom.gameDetailsModal.classList.add('is-inactive');
+        });
+
+        dom.projectSearchInput.addEventListener('input', () => {
+            if (dom.mainTitle.textContent === 'Ma Bibliothèque Steam') {
+                renderSteamGames();
+            } else {
+                renderItems();
+            }
+        });
         document.getElementById('cancel-edit-btn').addEventListener('click', closeEditModal);
         document.getElementById('icon-picker-trigger').addEventListener('click', openIconPicker);
         document.getElementById('cancel-icon-picker-btn').addEventListener('click', closeIconPicker);
@@ -1124,57 +1481,84 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         dom.itemsContainer.addEventListener('click', async (e) => {
-            const button = e.target.closest('button');
-            if (!button) return;
+            const isGamingView = dom.mainTitle.textContent === 'Ma Bibliothèque Steam';
 
-            const card = button.closest('.item-card');
-            if (!card) return;
-
-            const index = parseInt(card.dataset.index, 10);
-            const item = state.currentItems[index];
-
-            if (button.classList.contains('npm-script-btn')) {
-                const script = button.dataset.script;
-                if (item && item.path && script) {
-                    window.electronAPI.runNpmScript({ projectPath: item.path, script: script });
+            if (isGamingView) {
+                const launchButton = e.target.closest('.game-card-launch-btn');
+                if (launchButton) {
+                    const appId = launchButton.dataset.appid;
+                    if (appId) window.electronAPI.steamLaunchGame(appId);
+                    return;
                 }
-            } else if (button.classList.contains('launch-btn') && !state.isEditMode) {
-                if (item && item.commands) {
-                    window.electronAPI.launchProject({ commands: item.commands, name: item.name });
-                    showCustomNotification(`Lancement de ${item.name}...`);
+                const gameCard = e.target.closest('.game-card');
+                if (gameCard) {
+                    const appid = gameCard.dataset.appid;
+                    if (appid) openGameDetailsModal(appid);
+                    return;
                 }
-            } else if (button.classList.contains('action-btn')) {
-                const action = button.dataset.action;
-                if (item && item.path) {
-                    if (action.startsWith('git-')) {
-                        button.classList.add('loading');
-                        const command = action.replace('git-', '');
-                        const result = await window.electronAPI.gitCommand({ command, path: item.path });
-                        button.classList.remove('loading');
-                        if (result.success) {
-                            showCustomNotification(`Git ${command} réussi !`);
-                            renderItems(); // Refresh to show new status
-                        } else {
-                            showCustomNotification(`Erreur Git: ${result.message}`, 'error');
-                        }
-                    } else {
-                        window.electronAPI.projectAction({ action, path: item.path });
+            } else {
+                const button = e.target.closest('button');
+                if (!button) return;
+                const card = button.closest('.item-card');
+                if (!card) return;
+                const index = parseInt(card.dataset.index, 10);
+                const item = state.currentItems[index];
+
+                if (button.classList.contains('npm-script-btn')) {
+                    const script = button.dataset.script;
+                    if (item && item.path && script) {
+                        window.electronAPI.runNpmScript({ projectPath: item.path, script: script });
                     }
-                }
-            } else if (button.classList.contains('edit')) {
-                openEditModal(index);
-            } else if (button.classList.contains('delete')) {
-                const confirmed = await showConfirmationModal(`Êtes-vous sûr de vouloir supprimer "${item.name}" ?`);
-                if (confirmed) {
-                    state.currentItems.splice(index, 1);
-                    window.electronAPI.saveItems({ filePath: state.currentFilePath, data: state.currentItems });
-                    showCustomNotification('Projet supprimé.', 'error');
-                    renderItems();
+                } else if (button.classList.contains('launch-btn') && !state.isEditMode) {
+                    if (item && item.commands) {
+                        window.electronAPI.launchProject({ commands: item.commands, name: item.name });
+                        showCustomNotification(`Lancement de ${item.name}...`);
+                    }
+                } else if (button.classList.contains('action-btn')) {
+                    const action = button.dataset.action;
+                    if (item && item.path) {
+                        if (action.startsWith('git-')) {
+                            button.classList.add('loading');
+                            const command = action.replace('git-', '');
+                            const result = await window.electronAPI.gitCommand({ command, path: item.path });
+                            button.classList.remove('loading');
+                            if (result.success) {
+                                showCustomNotification(`Git ${command} réussi !`);
+                                renderItems();
+                            } else {
+                                showCustomNotification(`Erreur Git: ${result.message}`, 'error');
+                            }
+                        } else {
+                            window.electronAPI.projectAction({ action, path: item.path });
+                        }
+                    }
+                } else if (button.classList.contains('edit')) {
+                    openEditModal(index);
+                } else if (button.classList.contains('delete')) {
+                    const confirmed = await showConfirmationModal(`Êtes-vous sûr de vouloir supprimer "${item.name}" ?`);
+                    if (confirmed) {
+                        state.currentItems.splice(index, 1);
+                        window.electronAPI.saveItems({ filePath: state.currentFilePath, data: state.currentItems });
+                        showCustomNotification('Projet supprimé.', 'error');
+                        renderItems();
+                    }
                 }
             }
         });
 
-        dom.projectSearchInput.addEventListener('input', renderItems);
+        window.electronAPI.onUpdateAvailable(() => {
+            updateNotification.classList.remove('hidden');
+            updateMessage.textContent = 'Une nouvelle mise à jour est en cours de téléchargement...';
+        });
+
+        window.electronAPI.onUpdateDownloaded(() => {
+            updateMessage.textContent = 'Mise à jour prête à être installée !';
+            updateRestartBtn.classList.remove('hidden');
+        });
+
+        updateRestartBtn.addEventListener('click', () => {
+            window.electronAPI.restartApp();
+        });
 
         loadAndApplySettings();
 

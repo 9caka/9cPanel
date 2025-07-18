@@ -2,12 +2,15 @@ const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const { exec } = require('child_process');
 const fs = require('fs').promises;
-const os = require('os-utils');
+const fsSync = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 const si = require('systeminformation');
 const Parser = require('rss-parser');
 const parser = new Parser();
 const semver = require('semver');
+const dotenv = require('dotenv');
+const axios = require('axios'); 
+const { autoUpdater } = require('electron-updater');
 
 const openDatabases = new Map();
 
@@ -52,6 +55,9 @@ function createWindow() {
   
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
+    if (app.isPackaged) {
+        autoUpdater.checkForUpdatesAndNotify();
+    }
   });
 
   setInterval(() => {
@@ -325,4 +331,190 @@ ipcMain.on('db:close', (event, filePath) => {
             console.log(`Connexion à ${filePath} fermée.`);
         });
     }
+});
+
+ipcMain.handle('env:get-projects', async () => {
+    try {
+        const projectsPath = path.join(__dirname, 'src/data/projects-dev.json');
+        const projects = JSON.parse(await fs.readFile(projectsPath, 'utf-8'));
+        const projectsWithEnv = [];
+        for (const project of projects) {
+            if (project.path && fsSync.existsSync(path.join(project.path, '.env'))) {
+                projectsWithEnv.push({ name: project.name, path: project.path });
+            }
+        }
+        return { success: true, projects: projectsWithEnv };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('env:read', async (event, projectPath) => {
+    try {
+        const envPath = path.join(projectPath, '.env');
+        const content = await fs.readFile(envPath, 'utf-8');
+        const parsed = dotenv.parse(content);
+        return { success: true, data: parsed };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('env:save', async (event, { projectPath, data }) => {
+    try {
+        const envPath = path.join(projectPath, '.env');
+        const content = Object.entries(data)
+            .map(([key, value]) => `${key}=${value}`)
+            .join('\n');
+        await fs.writeFile(envPath, content, 'utf-8');
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('steam:get-owned-games', async () => {
+    try {
+        const settingsPath = path.join(__dirname, 'src/data/settings.json');
+        const settings = JSON.parse(await fs.readFile(settingsPath, 'utf-8').catch(() => '{}'));
+
+        if (!settings.steamApiKey || !settings.steamId) {
+            throw new Error("La clé d'API Steam ou le SteamID ne sont pas configurés.");
+        }
+
+        const url = `http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=${settings.steamApiKey}&steamid=${settings.steamId}&format=json&include_appinfo=1`;
+        const response = await axios.get(url);
+
+        if (response.data && response.data.response && response.data.response.games) {
+            const games = response.data.response.games.map(game => ({
+                appid: game.appid,
+                name: game.name,
+                playtime_forever: game.playtime_forever,
+                img_icon_url: game.img_icon_url,
+                banner_url: `https://cdn.akamai.steamstatic.com/steam/apps/${game.appid}/header.jpg`
+            }));
+            return { success: true, games: games };
+        } else {
+            throw new Error("Réponse de l'API Steam invalide.");
+        }
+    } catch (error) {
+        console.error("Erreur API Steam:", error.message);
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.on('steam:launch-game', (event, appId) => {
+    if (appId) {
+        shell.openExternal(`steam://run/${appId}`);
+    }
+});
+
+ipcMain.handle('steam:get-installed-apps', async () => {
+    try {
+        const steamPath = 'C:\\Program Files (x86)\\Steam';
+        if (!fsSync.existsSync(steamPath)) {
+            return { success: true, appids: [] };
+        }
+        const libraryFoldersPath = path.join(steamPath, 'steamapps', 'libraryfolders.vdf');
+        const content = await fs.readFile(libraryFoldersPath, 'utf-8');
+        
+        const libraryPaths = [path.join(steamPath)];
+        const regex = /"path"\s+"(.+?)"/g;
+        let match;
+        while ((match = regex.exec(content)) !== null) {
+            libraryPaths.push(match[1].replace(/\\\\/g, '\\'));
+        }
+
+        let installedAppIds = [];
+        for (const libPath of libraryPaths) {
+            const steamappsPath = path.join(libPath, 'steamapps');
+            if (fsSync.existsSync(steamappsPath)) {
+                const files = await fs.readdir(steamappsPath);
+                const appManifests = files.filter(f => f.startsWith('appmanifest_') && f.endsWith('.acf'));
+                const appids = appManifests.map(f => f.replace('appmanifest_', '').replace('.acf', ''));
+                installedAppIds.push(...appids);
+            }
+        }
+        return { success: true, appids: [...new Set(installedAppIds)] };
+    } catch (error) {
+        console.error("Erreur de détection des jeux installés:", error.message);
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('steam:get-game-details', async (event, appid) => {
+    try {
+        const url = `https://store.steampowered.com/api/appdetails?appids=${appid}&l=french`;
+        const response = await axios.get(url);
+        const data = response.data[appid];
+
+        if (data && data.success) {
+            return { success: true, details: data.data };
+        } else {
+            throw new Error("Impossible de récupérer les détails du jeu.");
+        }
+    } catch (error) {
+        console.error(`Erreur API Steam Details pour ${appid}:`, error.message);
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('steam:get-player-achievements', async (event, appid) => {
+    try {
+        const settingsPath = path.join(__dirname, 'src/data/settings.json');
+        const settings = JSON.parse(await fs.readFile(settingsPath, 'utf-8').catch(() => '{}'));
+        if (!settings.steamApiKey || !settings.steamId) {
+            throw new Error("Clé d'API Steam ou SteamID non configurés.");
+        }
+
+        const playerAchievementsUrl = `http://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v0001/?appid=${appid}&key=${settings.steamApiKey}&steamid=${settings.steamId}`;
+        const playerResponse = await axios.get(playerAchievementsUrl);
+        const playerAchievements = playerResponse.data.playerstats.achievements || [];
+
+        const schemaUrl = `http://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=${settings.steamApiKey}&appid=${appid}`;
+        const schemaResponse = await axios.get(schemaUrl);
+        const schemaAchievements = schemaResponse.data.game.availableGameStats.achievements || [];
+
+        const mergedAchievements = schemaAchievements.map(schemaAch => {
+            const playerAch = playerAchievements.find(pAch => pAch.apiname === schemaAch.name);
+            return {
+                name: schemaAch.displayName,
+                description: schemaAch.description,
+                icon: schemaAch.icon,
+                unlocked: playerAch ? playerAch.achieved === 1 : false,
+            };
+        });
+
+        return { success: true, achievements: mergedAchievements };
+    } catch (error) {
+        console.error(`Erreur API Succès Steam pour ${appid}:`, error.message);
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('get-launch-on-startup', () => {
+    return app.getLoginItemSettings().openAtLogin;
+});
+
+ipcMain.on('set-launch-on-startup', (event, shouldLaunch) => {
+    if (app.isPackaged) {
+        app.setLoginItemSettings({
+            openAtLogin: shouldLaunch,
+            path: app.getPath('exe')
+        });
+    }
+});
+
+autoUpdater.on('update-available', () => {
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    mainWindow.webContents.send('update-available');
+});
+
+autoUpdater.on('update-downloaded', () => {
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    mainWindow.webContents.send('update-downloaded');
+});
+
+ipcMain.on('restart-app', () => {
+    autoUpdater.quitAndInstall();
 });

@@ -505,18 +505,37 @@ ipcMain.on('set-launch-on-startup', (event, shouldLaunch) => {
     }
 });
 
+autoUpdater.on('checking-for-update', () => {
+    log.info('Vérification des mises à jour...');
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    mainWindow.webContents.send('update-checking');
+});
+
 autoUpdater.on('update-available', (info) => {
+    log.info('Mise à jour disponible.', info);
     const mainWindow = BrowserWindow.getAllWindows()[0];
     mainWindow.webContents.send('update-info', info);
 });
 
+autoUpdater.on('update-not-available', () => {
+    log.info('Aucune mise à jour disponible.');
+});
+
+autoUpdater.on('error', (err) => {
+    log.error('Erreur de mise à jour :', err);
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    mainWindow.webContents.send('update-error', err.message);
+});
+
 autoUpdater.on('download-progress', (progressObj) => {
     const mainWindow = BrowserWindow.getAllWindows()[0];
-    console.log(`Téléchargement de la mise à jour : ${progressObj.percent.toFixed(1)}%`);
+    const log_message = `Vitesse de téléchargement : ${progressObj.bytesPerSecond} - Téléchargé ${progressObj.percent.toFixed(1)}% (${progressObj.transferred}/${progressObj.total})`;
+    log.info(log_message);
     mainWindow.webContents.send('update-download-progress', progressObj.percent);
 });
 
 autoUpdater.on('update-downloaded', () => {
+    log.info('Mise à jour téléchargée.');
     const mainWindow = BrowserWindow.getAllWindows()[0];
     mainWindow.webContents.send('update-downloaded');
 });

@@ -1555,7 +1555,9 @@ async function loadAndRenderAchievements(appid) {
         const updateModal = document.getElementById('update-modal');
         const updateVersionEl = document.getElementById('update-version');
         const updateNotesEl = document.getElementById('update-notes');
+        const updateProgressContainer = document.getElementById('update-progress-container');
         const updateProgressBar = document.getElementById('update-progress-bar');
+        const updateProgressText = document.getElementById('update-progress-text');
         const updateLaterBtn = document.getElementById('update-later-btn');
         const updateNowBtn = document.getElementById('update-now-btn');
 
@@ -1571,15 +1573,22 @@ async function loadAndRenderAchievements(appid) {
 
         updateNowBtn.addEventListener('click', () => {
             updateNowBtn.disabled = true;
+            updateLaterBtn.disabled = true;
             updateNowBtn.textContent = 'Téléchargement...';
-            updateProgressBar.classList.remove('hidden');
+            updateProgressContainer.classList.remove('hidden');
             window.electronAPI.downloadUpdate();
         });
 
+        window.electronAPI.onUpdateDownloadProgress((percent) => {
+            updateProgressBar.style.width = `${percent.toFixed(1)}%`;
+            updateProgressText.textContent = `Téléchargement... ${percent.toFixed(1)}%`;
+        });
+
         window.electronAPI.onUpdateDownloaded(() => {
-            updateProgressBar.classList.add('hidden');
+            updateProgressContainer.classList.add('hidden');
             updateNowBtn.textContent = 'Redémarrer et Installer';
             updateNowBtn.disabled = false;
+            updateLaterBtn.disabled = false;
             updateNowBtn.onclick = () => {
                 window.electronAPI.restartApp();
             };

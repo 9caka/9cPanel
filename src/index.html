@@ -463,8 +463,11 @@
             <div id="update-notes" class="bg-secondary p-4 rounded-md h-48 overflow-y-auto text-sm text-secondary border border-primary">
             </div>
 
-            <div id="update-progress-bar" class="w-full bg-secondary rounded-full h-2.5 my-4 hidden">
-                <div class="bg-accent h-2.5 rounded-full animate-pulse"></div>
+            <div id="update-progress-container" class="w-full my-4 hidden">
+                <div class="w-full bg-secondary rounded-full h-2.5">
+                    <div id="update-progress-bar" class="bg-accent h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p id="update-progress-text" class="text-center text-xs text-tertiary mt-1">Téléchargement...</p>
             </div>
 
             <div id="update-footer" class="flex justify-end gap-4 pt-6 mt-auto">

@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getLaunchOnStartup: () => ipcRenderer.invoke('get-launch-on-startup'),
   setLaunchOnStartup: (shouldLaunch) => ipcRenderer.send('set-launch-on-startup', shouldLaunch),
   onUpdateInfo: (callback) => ipcRenderer.on('update-info', (event, ...args) => callback(...args)),
+  onUpdateDownloadProgress: (callback) => ipcRenderer.on('update-download-progress', (event, ...args) => callback(...args)),
   onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback),
   downloadUpdate: () => ipcRenderer.send('download-update'),
   restartApp: () => ipcRenderer.send('restart-app'),

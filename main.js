@@ -508,10 +508,11 @@ ipcMain.on('set-launch-on-startup', (event, shouldLaunch) => {
 autoUpdater.on('update-available', (info) => {
     const mainWindow = BrowserWindow.getAllWindows()[0];
     mainWindow.webContents.send('update-info', info);
-})
+});
 
 autoUpdater.on('download-progress', (progressObj) => {
     const mainWindow = BrowserWindow.getAllWindows()[0];
+    console.log(`Téléchargement de la mise à jour : ${progressObj.percent.toFixed(1)}%`);
     mainWindow.webContents.send('update-download-progress', progressObj.percent);
 });
 

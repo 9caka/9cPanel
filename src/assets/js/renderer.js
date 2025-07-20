@@ -1580,6 +1580,7 @@ async function loadAndRenderAchievements(appid) {
         });
 
         window.electronAPI.onUpdateDownloadProgress((percent) => {
+            console.log(`Progression reçue : ${percent}%`);
             updateProgressBar.style.width = `${percent.toFixed(1)}%`;
             updateProgressText.textContent = `Téléchargement... ${percent.toFixed(1)}%`;
         });

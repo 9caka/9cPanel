@@ -1,6 +1,6 @@
 {
   "name": "9cpanel",
-  "version": "1.10.4",
+  "version": "1.10.5",
   "description": "Un panel personnalisé pour le dev et le gaming.",
   "main": "main.js",
   "scripts": {

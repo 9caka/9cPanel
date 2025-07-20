@@ -4,3 +4,6 @@ package-lock.json
 src/data/projects-dev.json
 src/data/settings.json
 src/data/todos.json
+src/data/rss-feeds.json
+src/data/scratchpad.txt
+src/data/snippets.json

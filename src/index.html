@@ -308,13 +308,19 @@
             <div class="max-w-md mx-auto space-y-8">
                 <div class="widget">
                     <h3 class="widget-header">Application</h3>
-                    <div class="widget-content flex justify-between items-center">
-                        <span class="text-main">Lancer au démarrage de Windows</span>
-                        <div class="theme-switcher">
-                            <input type="checkbox" id="launch-on-startup-toggle" class="hidden">
-                            <label for="launch-on-startup-toggle" class="theme-toggle-label">
-                                <span class="ball"></span>
-                            </label>
+                    <div class="widget-content space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-main">Lancer au démarrage de Windows</span>
+                            <div class="theme-switcher">
+                                <input type="checkbox" id="launch-on-startup-toggle" class="hidden">
+                                <label for="launch-on-startup-toggle" class="theme-toggle-label">
+                                    <span class="ball"></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center pt-4 border-t border-primary">
+                            <span class="text-main">Version</span>
+                            <span id="app-version" class="text-tertiary font-mono">...</span>
                         </div>
                     </div>
                 </div>
@@ -447,12 +453,28 @@
             </div>
         </div>
     </div>
-    <div id="notification-container" class="fixed bottom-4 right-4 z-[10002] w-80 space-y-3">
+
+    <div id="update-modal" class="modal-overlay is-inactive">
+        <div class="bg-primary p-8 rounded-xl shadow-2xl w-full max-w-lg border border-secondary flex flex-col">
+            <h2 class="text-2xl font-bold text-main mb-2">Mise à jour disponible !</h2>
+            <p class="text-secondary mb-4">Une nouvelle version <span id="update-version" class="font-bold text-accent"></span> est prête.</p>
+            
+            <h3 class="font-bold text-main mt-4 mb-2">Nouveautés :</h3>
+            <div id="update-notes" class="bg-secondary p-4 rounded-md h-48 overflow-y-auto text-sm text-secondary border border-primary">
+            </div>
+
+            <div id="update-progress-bar" class="w-full bg-secondary rounded-full h-2.5 my-4 hidden">
+                <div class="bg-accent h-2.5 rounded-full animate-pulse"></div>
+            </div>
+
+            <div id="update-footer" class="flex justify-end gap-4 pt-6 mt-auto">
+                <button id="update-later-btn" class="btn-secondary">Plus tard</button>
+                <button id="update-now-btn" class="btn-primary">Installer maintenant</button>
+            </div>
+        </div>
     </div>
 
-    <div id="update-notification" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 bg-secondary p-4 rounded-lg shadow-lg border border-primary flex items-center gap-4 z-[10003]">
-        <span id="update-message"></span>
-        <button id="update-restart-btn" class="btn-primary hidden">Redémarrer et Mettre à Jour</button>
+    <div id="notification-container" class="fixed bottom-4 right-4 z-[10002] w-80 space-y-3">
     </div>
 
     <script src="./assets/js/renderer.js"></script>

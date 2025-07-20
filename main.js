@@ -56,7 +56,7 @@ function createWindow() {
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     if (app.isPackaged) {
-        autoUpdater.checkForUpdatesAndNotify();
+        autoUpdater.checkForUpdates();
     }
   });
 
@@ -505,9 +505,14 @@ ipcMain.on('set-launch-on-startup', (event, shouldLaunch) => {
     }
 });
 
-autoUpdater.on('update-available', () => {
+autoUpdater.on('update-available', (info) => {
     const mainWindow = BrowserWindow.getAllWindows()[0];
-    mainWindow.webContents.send('update-available');
+    mainWindow.webContents.send('update-info', info);
+})
+
+autoUpdater.on('download-progress', (progressObj) => {
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    mainWindow.webContents.send('update-download-progress', progressObj.percent);
 });
 
 autoUpdater.on('update-downloaded', () => {
@@ -515,6 +520,14 @@ autoUpdater.on('update-downloaded', () => {
     mainWindow.webContents.send('update-downloaded');
 });
 
+ipcMain.on('download-update', () => {
+    autoUpdater.downloadUpdate();
+});
+
 ipcMain.on('restart-app', () => {
     autoUpdater.quitAndInstall();
+});
+
+ipcMain.handle('get-app-version', () => {
+    return app.getVersion();
 });

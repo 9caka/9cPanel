@@ -32,7 +32,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   steamGetPlayerAchievements: (appid) => ipcRenderer.invoke('steam:get-player-achievements', appid),
   getLaunchOnStartup: () => ipcRenderer.invoke('get-launch-on-startup'),
   setLaunchOnStartup: (shouldLaunch) => ipcRenderer.send('set-launch-on-startup', shouldLaunch),
-  onUpdateAvailable: (callback) => ipcRenderer.on('update-available', callback),
+  onUpdateInfo: (callback) => ipcRenderer.on('update-info', (event, ...args) => callback(...args)),
   onUpdateDownloaded: (callback) => ipcRenderer.on('update-downloaded', callback),
+  downloadUpdate: () => ipcRenderer.send('download-update'),
   restartApp: () => ipcRenderer.send('restart-app'),
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
 });

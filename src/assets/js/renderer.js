@@ -167,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const steamApiKeyInput = document.getElementById('steam-api-key-input');
             const steamIdInput = document.getElementById('steam-id-input');
             const launchOnStartupToggle = document.getElementById('launch-on-startup-toggle');
+            const appVersionEl = document.getElementById('app-version');
 
             if (state.settings.githubToken) githubTokenInput.value = state.settings.githubToken;
             if (state.settings.steamApiKey) steamApiKeyInput.value = state.settings.steamApiKey;
@@ -188,6 +189,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 saveSettings();
                 showCustomNotification('SteamID sauvegardé.');
             });
+
+                window.electronAPI.getAppVersion().then(version => {
+                    if (appVersionEl) {
+                        appVersionEl.textContent = `v${version}`;
+                    }
+                });
 
                 window.electronAPI.getLaunchOnStartup().then(isEnabled => {
                     launchOnStartupToggle.checked = isEnabled;
@@ -1545,22 +1552,38 @@ async function loadAndRenderAchievements(appid) {
         
         loadAndApplySettings();
 
-        const updateNotification = document.getElementById('update-notification');
-        const updateMessage = document.getElementById('update-message');
-        const updateRestartBtn = document.getElementById('update-restart-btn');
+        const updateModal = document.getElementById('update-modal');
+        const updateVersionEl = document.getElementById('update-version');
+        const updateNotesEl = document.getElementById('update-notes');
+        const updateProgressBar = document.getElementById('update-progress-bar');
+        const updateLaterBtn = document.getElementById('update-later-btn');
+        const updateNowBtn = document.getElementById('update-now-btn');
 
-        window.electronAPI.onUpdateAvailable(() => {
-            updateNotification.classList.remove('hidden');
-            updateMessage.textContent = 'Une nouvelle mise à jour est en cours de téléchargement...';
+        window.electronAPI.onUpdateInfo((info) => {
+            updateVersionEl.textContent = `v${info.version}`;
+            updateNotesEl.innerHTML = info.releaseNotes.replace(/\n/g, '<br>');
+            updateModal.classList.remove('is-inactive');
+        });
+
+        updateLaterBtn.addEventListener('click', () => {
+            updateModal.classList.add('is-inactive');
+        });
+
+        updateNowBtn.addEventListener('click', () => {
+            updateNowBtn.disabled = true;
+            updateNowBtn.textContent = 'Téléchargement...';
+            updateProgressBar.classList.remove('hidden');
+            window.electronAPI.downloadUpdate();
         });
 
         window.electronAPI.onUpdateDownloaded(() => {
-            updateMessage.textContent = 'Mise à jour prête à être installée !';
-            updateRestartBtn.classList.remove('hidden');
-        });
-
-        updateRestartBtn.addEventListener('click', () => {
-            window.electronAPI.restartApp();
+            updateProgressBar.classList.add('hidden');
+            updateNowBtn.textContent = 'Redémarrer et Installer';
+            updateNowBtn.disabled = false;
+            updateNowBtn.onclick = () => {
+                window.electronAPI.restartApp();
+            };
+            updateLaterBtn.textContent = 'Plus tard';
         });
 
     } catch (error) {

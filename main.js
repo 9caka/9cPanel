@@ -20,6 +20,22 @@ const PINNED_PROJECTS_PATH = path.join(__dirname, 'src/data/pinned_projects.json
 
 const openDatabases = new Map();
 
+const userDataPath = app.isPackaged 
+  ? app.getPath('userData')
+  : path.join(__dirname, 'src');
+
+if (app.isPackaged && !fsSync.existsSync(userDataPath)) {
+  fsSync.mkdirSync(userDataPath, { recursive: true });
+}
+
+const getDataPath = (fileName) => {
+    const dataDir = path.join(userDataPath, 'data');
+    if (!fsSync.existsSync(dataDir)) {
+        fsSync.mkdirSync(dataDir, { recursive: true });
+    }
+    return path.join(dataDir, fileName);
+};
+
 const execPromise = (command, options) => new Promise((resolve, reject) => {
     const env = { ...process.env };
     if (process.platform === 'win32') {
@@ -260,25 +276,31 @@ ipcMain.handle('docker:command', async (event, { action, id }) => {
 
 ipcMain.handle('read-file', async (event, filePath) => {
   try {
-    const fullPath = path.join(__dirname, filePath);
+    const fullPath = (fileName === 'icons.json') 
+    ? path.join(__dirname, 'src', 'data', fileName)
+      : getDataPath(fileName);
     const data = await fs.readFile(fullPath, 'utf-8');
-    if (!filePath.endsWith('.json')) return data;
-    return JSON.parse(data);
+    if (fileName.endsWith('.json')) {
+        return JSON.parse(data);
+    }
+    return data;
   } catch (err) {
     if (err.code === 'ENOENT') {
-      const isJson = filePath.endsWith('.json');
-      const defaultContent = isJson ? (filePath.includes('settings.json') ? '{}' : '[]') : '';
-      await fs.writeFile(path.join(__dirname, filePath), defaultContent, 'utf-8');
+      const isJson = fileName.endsWith('.json');
+      const defaultContent = isJson ? (fileName.includes('settings.json') ? '{}' : '[]') : '';
+      await fs.writeFile(getDataPath(fileName), defaultContent, 'utf-8');
       return isJson ? JSON.parse(defaultContent) : defaultContent;
     }
+    console.error(`Erreur de lecture pour ${fileName}:`, err);
     return null;
   }
 });
 
 ipcMain.on('save-items', async (event, { filePath, data }) => {
   try {
-    const fullPath = path.join(__dirname, filePath);
-    await fs.writeFile(fullPath, JSON.stringify(data, null, 2));
+    const fullPath = getDataPath(filePath);
+    const content = (typeof data === 'string') ? data : JSON.stringify(data, null, 2);
+    await fs.writeFile(fullPath, content);
   } catch (err) {
     console.error(`Erreur de sauvegarde pour ${filePath}:`, err);
   }

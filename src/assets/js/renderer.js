@@ -112,12 +112,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         async function loadTodos() {
-            state.todos = await window.electronAPI.readFile('src/data/todos.json') || [];
+            state.todos = await window.electronAPI.readFile('todos.json') || [];
             renderTodoLists();
         }
 
         function saveTodos() {
-            window.electronAPI.saveItems({ filePath: 'src/data/todos.json', data: state.todos });
+            window.electronAPI.saveItems({ filePath: 'todos.json', data: state.todos });
         }
 
         function addTodo(text) {
@@ -337,7 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         Promise.all([
             loadGames(),
-            window.electronAPI.readFile('src/data/projects-dev.json'),
+            window.electronAPI.readFile('projects-dev.json'),
             window.electronAPI.projectsGetPinned()
         ]).then(([_, devProjects, pinned]) => {
             state.currentItems = devProjects || [];
@@ -378,11 +378,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const saveSettings = () => {
-            window.electronAPI.saveItems({ filePath: 'src/data/settings.json', data: state.settings });
+            window.electronAPI.saveItems({ filePath: 'settings.json', data: state.settings });
         };
 
         const loadAndApplySettings = async () => {
-            const loadedSettings = await window.electronAPI.readFile('src/data/settings.json');
+            const loadedSettings = await window.electronAPI.readFile('settings.json');
             state.settings = { ...state.settings, ...loadedSettings };
             applySettings();
             if (!state.settingsInitialized) {
@@ -707,7 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.iconPickerModal.classList.remove('is-inactive');
             iconGrid.innerHTML = '<p class="text-tertiary col-span-full text-center">Chargement des icônes...</p>';
             try {
-                const icons = await window.electronAPI.readFile('src/data/icons.json');
+                const icons = await window.electronAPI.readFile('icons.json');
                 iconGrid.innerHTML = '';
                 if (icons && icons.length > 0) {
                     icons.forEach(iconClass => {
@@ -824,9 +824,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                     addTodoListeners();
                 };
-                const saveTodos = () => window.electronAPI.saveItems({ filePath: 'src/data/todos.json', data: todos });
+                const saveTodos = () => window.electronAPI.saveItems({ filePath: 'todos.json', data: todos });
                 const loadTodos = async () => {
-                    todos = await window.electronAPI.readFile('src/data/todos.json') || [];
+                    todos = await window.electronAPI.readFile('todos.json') || [];
                     renderTodos();
                 };
                 const addTodo = () => {
@@ -935,11 +935,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     renderSnippets();
                 };
                 const saveSnippets = () => {
-                    window.electronAPI.saveItems({ filePath: 'src/data/snippets.json', data: snippets });
+                    window.electronAPI.saveItems({ filePath: 'snippets.json', data: snippets });
                     showCustomNotification("Snippets sauvegardés !");
                 };
                 const loadSnippets = async () => {
-                    snippets = await window.electronAPI.readFile('src/data/snippets.json') || [];
+                    snippets = await window.electronAPI.readFile('snippets.json') || [];
                     renderSnippets();
                     selectSnippet(snippets.length > 0 ? 0 : -1);
                 };
@@ -981,11 +981,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const scratchpadInput = document.getElementById('scratchpad-input');
                 let scratchpadTimeout;
                 const loadScratchpad = async () => {
-                    const content = await window.electronAPI.readFile('src/data/scratchpad.txt');
+                    const content = await window.electronAPI.readFile('scratchpad.txt');
                     scratchpadInput.value = content || '';
                 };
                 const saveScratchpad = () => {
-                    window.electronAPI.saveItems({ filePath: 'src/data/scratchpad.txt', data: scratchpadInput.value });
+                    window.electronAPI.saveItems({ filePath: 'scratchpad.txt', data: scratchpadInput.value });
                     showCustomNotification('Note rapide sauvegardée.');
                 };
                 scratchpadInput.addEventListener('keyup', () => {

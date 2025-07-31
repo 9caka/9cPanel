@@ -33,6 +33,13 @@
     "appId": "com.9cBinks.9cpanel",
     "productName": "9cpanel",
     "artifactName": "${productName}-Setup-${version}.${ext}",
+    "files": [
+      "main.js",
+      "src/preload.js",
+      "src/index.html",
+      "src/assets/**/*",
+      "src/data/icons.json"
+    ],
     "win": {
       "target": "nsis",
       "icon": "src/assets/icon.ico"

@@ -237,20 +237,22 @@ ipcMain.handle('get-project-details', async (event, projectPath) => {
 
 ipcMain.handle('docker:command', async (event, { action, id }) => {
   console.log(`[Docker] Received command: ${action}` + (id ? ` for ID: ${id}` : ''));
-  
+
+  const dockerPath = '"C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe"';
   let command;
+
   switch (action) {
     case 'list':
-      command = 'docker ps -a --format "{{json .}}"';
+      command = `${dockerPath} ps -a --format "{{json .}}"`;
       break;
     case 'start':
-      command = `docker start ${id}`;
+      command = `${dockerPath} start ${id}`;
       break;
     case 'stop':
-      command = `docker stop ${id}`;
+      command = `${dockerPath} stop ${id}`;
       break;
     case 'remove':
-      command = `docker rm ${id}`;
+      command = `${dockerPath} rm ${id}`;
       break;
     default:
       return { success: false, error: 'Action Docker inconnue' };
@@ -270,28 +272,31 @@ ipcMain.handle('docker:command', async (event, { action, id }) => {
     return { success: true, data: output };
   } catch (error) {
     console.error(`[Docker] Erreur pour la commande "${command}":`, error.toString());
-    return { success: false, error: error.toString() };
+    return { success: false, error: "Docker n'est pas trouvé ou ne fonctionne pas. Assurez-vous qu'il est installé et lancé." };
   }
 });
 
 ipcMain.handle('read-file', async (event, filePath) => {
   try {
-    const fullPath = (fileName === 'icons.json') 
-    ? path.join(__dirname, 'src', 'data', fileName)
-      : getDataPath(fileName);
+    const isStaticData = ['icons.json', 'projects-dev.json'].includes(filePath);
+
+    const fullPath = isStaticData
+      ? path.join(__dirname, 'src', 'data', filePath)
+      : getDataPath(filePath);
+      
     const data = await fs.readFile(fullPath, 'utf-8');
-    if (fileName.endsWith('.json')) {
+    if (filePath.endsWith('.json')) {
         return JSON.parse(data);
     }
     return data;
   } catch (err) {
-    if (err.code === 'ENOENT') {
-      const isJson = fileName.endsWith('.json');
-      const defaultContent = isJson ? (fileName.includes('settings.json') ? '{}' : '[]') : '';
-      await fs.writeFile(getDataPath(fileName), defaultContent, 'utf-8');
+    if (err.code === 'ENOENT' && !['icons.json', 'projects-dev.json'].includes(filePath)) {
+      const isJson = filePath.endsWith('.json');
+      const defaultContent = isJson ? (filePath.includes('settings.json') ? '{}' : '[]') : '';
+      await fs.writeFile(getDataPath(filePath), defaultContent, 'utf-8');
       return isJson ? JSON.parse(defaultContent) : defaultContent;
     }
-    console.error(`Erreur de lecture pour ${fileName}:`, err);
+    console.error(`Erreur de lecture pour ${filePath}:`, err);
     return null;
   }
 });

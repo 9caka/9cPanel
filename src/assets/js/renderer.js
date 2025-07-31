@@ -7,33 +7,58 @@ const hslToRgb = (h, s, l) => { s /= 100; l /= 100; let c = (1 - Math.abs(2 * l 
 document.addEventListener('DOMContentLoaded', () => {
     try {
        const dom = {
-            allViews: document.querySelectorAll('.view-container'),
-            allModals: document.querySelectorAll('.modal-overlay'),
-            mainContent: document.getElementById('main-content'),
-            devtoolsView: document.getElementById('devtools-view'),
-            settingsView: document.getElementById('settings-view'),
-            welcomeScreen: document.getElementById('welcome-screen'),
-            mainTitle: document.getElementById('main-title'),
-            itemsContainer: document.getElementById('items-container'),
-            editModeBtn: document.getElementById('edit-mode-btn'),
-            refreshSteamBtn: document.getElementById('refresh-steam-btn'),
-            editModal: document.getElementById('edit-modal'),
-            editForm: document.getElementById('edit-form'),
-            iconPickerModal: document.getElementById('icon-picker-modal'),
-            gameDetailsModal: document.getElementById('game-details-modal'),
-            settingsBtn: document.getElementById('settings-btn'),
-            settingsBackBtn: document.getElementById('settings-back-btn'),
-            themeToggle: document.getElementById('theme-toggle'),
-            accentColorPicker: document.getElementById('accent-color-picker'),
-            notificationContainer: document.getElementById('notification-container'),
-            confirmModal: document.getElementById('confirm-modal'),
-            confirmMessage: document.getElementById('confirm-message'),
-            confirmOkBtn: document.getElementById('confirm-ok-btn'),
-            confirmCancelBtn: document.getElementById('confirm-cancel-btn'),
-            projectSearchInput: document.getElementById('project-search-input'),
-            sortOptions: document.getElementById('sort-options'),
-            launcherFilters: document.getElementById('launcher-filters'),
-            gameLibraryControls: document.getElementById('game-library-controls'),
+           allViews: document.querySelectorAll('.view-container'),
+           allModals: document.querySelectorAll('.modal-overlay'),
+           mainContent: document.getElementById('main-content'),
+           devtoolsView: document.getElementById('devtools-view'),
+           settingsView: document.getElementById('settings-view'),
+           welcomeScreen: document.getElementById('welcome-screen'),
+           mainTitle: document.getElementById('main-title'),
+           itemsContainer: document.getElementById('items-container'),
+           editModeBtn: document.getElementById('edit-mode-btn'),
+           refreshSteamBtn: document.getElementById('refresh-steam-btn'),
+           editModal: document.getElementById('edit-modal'),
+           editForm: document.getElementById('edit-form'),
+           iconPickerModal: document.getElementById('icon-picker-modal'),
+           gameDetailsModal: document.getElementById('game-details-modal'),
+           settingsBtn: document.getElementById('settings-btn'),
+           settingsBackBtn: document.getElementById('settings-back-btn'),
+           themeToggle: document.getElementById('theme-toggle'),
+           accentColorPicker: document.getElementById('accent-color-picker'),
+           notificationContainer: document.getElementById('notification-container'),
+           confirmModal: document.getElementById('confirm-modal'),
+           confirmMessage: document.getElementById('confirm-message'),
+           confirmOkBtn: document.getElementById('confirm-ok-btn'),
+           confirmCancelBtn: document.getElementById('confirm-cancel-btn'),
+           projectSearchInput: document.getElementById('project-search-input'),
+           sortOptions: document.getElementById('sort-options'),
+           launcherFilters: document.getElementById('launcher-filters'),
+           gameLibraryControls: document.getElementById('game-library-controls'),
+           dashboardView: document.getElementById('dashboard-view'),
+           recentGamesContainer: document.getElementById('recent-games-container'),
+           dashboardTodoList: document.getElementById('dashboard-todo-list'),
+           dashboardTodoInput: document.getElementById('dashboard-new-todo-input'),
+           dashboardTodoBtn: document.getElementById('dashboard-add-todo-btn'),
+           devToolsTodoList: document.getElementById('todo-list'),
+           devToolsTodoInput: document.getElementById('new-todo-input'),
+           devToolsTodoBtn: document.getElementById('add-todo-btn'),
+           pinnedProjectsContainer: document.getElementById('pinned-projects-container'),
+           dashboardCpuBar: document.getElementById('dashboard-cpu-bar'),
+           dashboardCpuPercent: document.getElementById('dashboard-cpu-percent'),
+           dashboardMemBar: document.getElementById('dashboard-mem-bar'),
+           dashboardMemPercent: document.getElementById('dashboard-mem-percent'),
+           dashboardDiskBar: document.getElementById('dashboard-disk-bar'),
+           dashboardDiskPercent: document.getElementById('dashboard-disk-percent'),
+           dashboardNetDownload: document.getElementById('dashboard-net-download'),
+           dashboardNetUpload: document.getElementById('dashboard-net-upload'),
+           devToolsCpuBar: document.getElementById('cpu-bar'),
+           devToolsCpuPercent: document.getElementById('cpu-percent'),
+           devToolsMemBar: document.getElementById('mem-bar'),
+           devToolsMemPercent: document.getElementById('mem-percent'),
+           devToolsDiskBar: document.getElementById('disk-bar'),
+           devToolsDiskPercent: document.getElementById('disk-percent'),
+           devToolsNetDownload: document.getElementById('net-download'),
+           devToolsNetUpload: document.getElementById('net-upload'),
         };
 
         const state = {
@@ -46,7 +71,222 @@ document.addEventListener('DOMContentLoaded', () => {
             settingsInitialized: false,
             activeFilter: 'all',
             activeSort: 'default',
+            todos: [],
+            pinnedProjects: [],
         };
+
+        function initSystemMonitor() {
+            window.electronAPI.onSystemStats(stats => {
+                const formatBytes = (bytes) => {
+                    if (bytes === 0) return '0 B/s';
+                    const k = 1024;
+                    const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+                    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+                };
+
+                const cpu = stats.cpu.toFixed(1);
+                const mem = stats.mem.toFixed(1);
+                const disk = stats.disk.toFixed(1);
+                const download = formatBytes(stats.net.download);
+                const upload = formatBytes(stats.net.upload);
+
+                if (dom.dashboardCpuBar) dom.dashboardCpuBar.style.width = `${cpu}%`;
+                if (dom.dashboardCpuPercent) dom.dashboardCpuPercent.textContent = `${cpu}%`;
+                if (dom.dashboardMemBar) dom.dashboardMemBar.style.width = `${mem}%`;
+                if (dom.dashboardMemPercent) dom.dashboardMemPercent.textContent = `${mem}%`;
+                if (dom.dashboardDiskBar) dom.dashboardDiskBar.style.width = `${disk}%`;
+                if (dom.dashboardDiskPercent) dom.dashboardDiskPercent.textContent = `${disk}%`;
+                if (dom.dashboardNetDownload) dom.dashboardNetDownload.textContent = download;
+                if (dom.dashboardNetUpload) dom.dashboardNetUpload.textContent = upload;
+
+                if (dom.devToolsCpuBar) dom.devToolsCpuBar.style.width = `${cpu}%`;
+                if (dom.devToolsCpuPercent) dom.devToolsCpuPercent.textContent = `${cpu}%`;
+                if (dom.devToolsMemBar) dom.devToolsMemBar.style.width = `${mem}%`;
+                if (dom.devToolsMemPercent) dom.devToolsMemPercent.textContent = `${mem}%`;
+                if (dom.devToolsDiskBar) dom.devToolsDiskBar.style.width = `${disk}%`;
+                if (dom.devToolsDiskPercent) dom.devToolsDiskPercent.textContent = `${disk}%`;
+                if (dom.devToolsNetDownload) dom.devToolsNetDownload.textContent = download;
+                if (dom.devToolsNetUpload) dom.devToolsNetUpload.textContent = upload;
+            });
+        }
+
+        async function loadTodos() {
+            state.todos = await window.electronAPI.readFile('src/data/todos.json') || [];
+            renderTodoLists();
+        }
+
+        function saveTodos() {
+            window.electronAPI.saveItems({ filePath: 'src/data/todos.json', data: state.todos });
+        }
+
+        function addTodo(text) {
+            const trimmedText = text.trim();
+            if (trimmedText) {
+                state.todos.push({ text: trimmedText, completed: false });
+                saveTodos();
+                renderTodoLists();
+            }
+        }
+
+        function deleteTodo(index) {
+            state.todos.splice(index, 1);
+            saveTodos();
+            renderTodoLists();
+        }
+
+        function toggleTodo(index, completed) {
+            if (state.todos[index]) {
+                state.todos[index].completed = completed;
+                saveTodos();
+                renderTodoLists();
+            }
+        }
+
+        function renderTodoLists() {
+            const listsToRender = [
+                { container: dom.dashboardTodoList },
+                { container: dom.devToolsTodoList }
+            ];
+
+            listsToRender.forEach(({ container }) => {
+                if (!container) return;
+                container.innerHTML = '';
+                state.todos.forEach((todo, index) => {
+                    const li = document.createElement('li');
+                    li.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+                    li.innerHTML = `<input type="checkbox" data-index="${index}" ${todo.completed ? 'checked' : ''}><span class="flex-grow">${todo.text}</span><button class="command-item-btn delete" data-index="${index}"><i class="fas fa-trash"></i></button>`;
+                    container.appendChild(li);
+                });
+            });
+        }
+
+
+        function initTodoSystem() {
+            dom.dashboardTodoBtn.addEventListener('click', () => {
+                addTodo(dom.dashboardTodoInput.value);
+                dom.dashboardTodoInput.value = '';
+            });
+            dom.dashboardTodoInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addTodo(dom.dashboardTodoInput.value);
+                    dom.dashboardTodoInput.value = '';
+                }
+            });
+            dom.dashboardTodoList.addEventListener('click', async (e) => {
+                const target = e.target;
+                if (target.type === 'checkbox') {
+                    toggleTodo(target.dataset.index, target.checked);
+                }
+                if (target.closest('.delete')) {
+                    const index = target.closest('.delete').dataset.index;
+                    const confirmed = await showConfirmationModal('Supprimer cette tâche ?');
+                    if (confirmed) {
+                        deleteTodo(index);
+                        showCustomNotification('Tâche supprimée.', 'error');
+                    }
+                }
+            });
+
+            dom.devToolsTodoBtn.addEventListener('click', () => {
+                addTodo(dom.devToolsTodoInput.value);
+                dom.devToolsTodoInput.value = '';
+            });
+            dom.devToolsTodoInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addTodo(dom.devToolsTodoInput.value);
+                    dom.devToolsTodoInput.value = '';
+                }
+            });
+            dom.devToolsTodoList.addEventListener('click', async (e) => {
+                const target = e.target;
+                if (target.type === 'checkbox') {
+                    toggleTodo(target.dataset.index, target.checked);
+                }
+                if (target.closest('.delete')) {
+                    const index = target.closest('.delete').dataset.index;
+                    const confirmed = await showConfirmationModal('Supprimer cette tâche ?');
+                    if (confirmed) {
+                        deleteTodo(index);
+                        showCustomNotification('Tâche supprimée.', 'error');
+                    }
+                }
+            });
+
+            loadTodos();
+        }
+
+        dom.pinnedProjectsContainer.addEventListener('click', (e) => {
+            const launchBtn = e.target.closest('.pinned-project-launch-btn');
+            if (launchBtn) {
+                const card = launchBtn.closest('.pinned-project-card');
+                const index = parseInt(card.dataset.index, 10);
+                const project = state.currentItems[index];
+                if (project && project.commands) {
+                    window.electronAPI.launchProject({ commands: project.commands, name: project.name });
+                    showCustomNotification(`Lancement de ${project.name}...`);
+                }
+            }
+        });
+
+        async function populateDashboard() {
+            const recentlyPlayed = await window.electronAPI.gamesGetRecentlyPlayed();
+            const recentGamesContainer = document.getElementById('recent-games-container');
+            recentGamesContainer.innerHTML = '';
+
+            if (recentlyPlayed.length === 0) {
+                recentGamesContainer.innerHTML = '<p class="text-tertiary text-center col-span-full">Lancez des jeux pour les voir ici !</p>';
+                return;
+            }
+
+            const recentGamesToShow = recentlyPlayed.slice(0, 3);
+
+            recentGamesToShow.forEach(recentGame => {
+                const [launcher, appid] = recentGame.id.split('_');
+                const game = state.currentGames.find(g => String(g.launcher) === launcher && String(g.appid) === appid);
+
+                if (game) {
+                    const card = document.createElement('div');
+                    card.className = 'recent-game-card';
+                    card.style.backgroundImage = `url('${game.banner_url}')`;
+                    card.dataset.appid = game.appid;
+                    card.dataset.launcher = game.launcher;
+
+                    card.innerHTML = `
+                <div class="recent-game-overlay">
+                    <h4 class="recent-game-title">${game.name}</h4>
+                </div>
+            `;
+                    recentGamesContainer.appendChild(card);
+                }
+            });
+
+            const pinnedContainer = document.getElementById('pinned-projects-container');
+            pinnedContainer.innerHTML = '';
+
+            if (state.pinnedProjects.length === 0) {
+                pinnedContainer.innerHTML = '<p class="text-tertiary text-center col-span-full">Épinglez des projets pour les voir ici !</p>';
+            } else {
+                state.pinnedProjects.forEach(projectIndex => {
+                    const project = state.currentItems[projectIndex];
+                    if (project) {
+                        const card = document.createElement('div');
+                        card.className = 'pinned-project-card';
+                        card.dataset.index = projectIndex;
+
+                        card.innerHTML = `
+                    <div class="pinned-project-icon"><i class="${project.icon || 'fas fa-code'}"></i></div>
+                    <div class="pinned-project-details">
+                        <h4 class="pinned-project-title">${project.name}</h4>
+                        <p class="pinned-project-description">${project.description}</p>
+                    </div>
+                    <button class="pinned-project-launch-btn"><i class="fas fa-play"></i></button>
+                `;
+                        pinnedContainer.appendChild(card);
+                    }
+                });
+            }
+        }
 
        function showCustomNotification(message, type = 'success') {
             const toast = document.createElement('div');
@@ -92,6 +332,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (existingRipple) existingRipple.remove();
             button.appendChild(circle);
         }
+
+        showView(dom.dashboardView);
+        
+        Promise.all([
+            loadGames(),
+            window.electronAPI.readFile('src/data/projects-dev.json'),
+            window.electronAPI.projectsGetPinned()
+        ]).then(([_, devProjects, pinned]) => {
+            state.currentItems = devProjects || [];
+            state.pinnedProjects = pinned || [];
+
+            populateDashboard();
+        });
+        initTodoSystem();
+        initSystemMonitor();
 
         const applySettings = () => {
             document.documentElement.dataset.theme = state.settings.theme;
@@ -297,8 +552,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 itemCard.className = 'item-card group';
                 itemCard.dataset.index = originalIndex;
                 if (state.isEditMode) itemCard.draggable = true;
+                const isPinned = state.pinnedProjects.includes(originalIndex);
                 
                 itemCard.innerHTML = `
+                    <button class="pin-btn ${isPinned ? 'pinned' : ''}" title="Épingler au tableau de bord"> <i class="fas fa-thumbtack"></i> </button>
                     <div class="card-controls"><button class="card-control-btn edit" title="Modifier"><i class="fas fa-pencil-alt"></i></button><button class="card-control-btn delete" title="Supprimer"><i class="fas fa-trash"></i></button></div>
                     <div class="flex-grow pointer-events-none">
                         <div class="mb-5"><i class="${item.icon || 'fas fa-question-circle'} fa-2x text-tertiary group-hover:text-accent transition-colors"></i></div>
@@ -553,23 +810,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (state.devToolsInitialized) return;
             console.log('[Init] Initializing dev tools for the first time...');
             try {
-                window.electronAPI.onSystemStats(stats => {
-                const formatBytes = (bytes) => {
-                    if (bytes === 0) return '0 B/s';
-                    const k = 1024;
-                    const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
-                    const i = Math.floor(Math.log(bytes) / Math.log(k));
-                    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-                };
-                document.getElementById('cpu-bar').style.width = `${stats.cpu.toFixed(1)}%`;
-                document.getElementById('cpu-percent').textContent = `${stats.cpu.toFixed(1)}%`;
-                document.getElementById('mem-bar').style.width = `${stats.mem.toFixed(1)}%`;
-                document.getElementById('mem-percent').textContent = `${stats.mem.toFixed(1)}%`;
-                document.getElementById('disk-bar').style.width = `${stats.disk.toFixed(1)}%`;
-                document.getElementById('disk-percent').textContent = `${stats.disk.toFixed(1)}%`;
-                document.getElementById('net-download').textContent = formatBytes(stats.net.download);
-                document.getElementById('net-upload').textContent = formatBytes(stats.net.upload);
-            });
                 const todoList = document.getElementById('todo-list');
                 const newTodoInput = document.getElementById('new-todo-input');
                 const addTodoBtn = document.getElementById('add-todo-btn');
@@ -1572,10 +1812,54 @@ async function loadAndRenderAchievements(game) {
             });
         });
 
-        document.getElementById('back-btn').addEventListener('click', () => showView(dom.welcomeScreen));
-        document.getElementById('devtools-back-btn').addEventListener('click', () => showView(dom.welcomeScreen));
-        dom.settingsBtn.addEventListener('click', () => showView(dom.settingsView));
-        dom.settingsBackBtn.addEventListener('click', () => showView(dom.welcomeScreen));
+        document.getElementById('back-btn').addEventListener('click', () => showView(dom.dashboardView));
+        document.getElementById('devtools-back-btn').addEventListener('click', () => showView(dom.dashboardView));
+        document.getElementById('dashboard-settings-btn').addEventListener('click', () => showView(dom.settingsView));
+        dom.settingsBackBtn.addEventListener('click', () => showView(dom.dashboardView));
+        document.getElementById('goto-library-btn').addEventListener('click', () => {
+            showView(dom.mainContent);
+            dom.mainTitle.textContent = 'Ma Bibliothèque de Jeux';
+            displayGames();
+            
+            dom.editModeBtn.style.display = 'none';
+            dom.refreshSteamBtn.style.display = 'block';
+            dom.gameLibraryControls.style.display = 'flex';
+        });
+
+        document.getElementById('goto-dev-btn').addEventListener('click', () => {
+            showView(dom.mainContent);
+            dom.mainTitle.textContent = 'Mes Projets de Développement';
+            renderItems();
+            
+            dom.editModeBtn.style.display = 'block';
+            dom.refreshSteamBtn.style.display = 'none';
+            dom.gameLibraryControls.style.display = 'none';
+        });
+
+        document.getElementById('goto-tools-btn').addEventListener('click', () => {
+            showView(dom.devtoolsView);
+            if (!state.devToolsInitialized) {
+                initDevTools();
+            }
+        });
+
+        dom.recentGamesContainer.addEventListener('click', (e) => {
+            const card = e.target.closest('.recent-game-card');
+            if (card) {
+                const appid = card.dataset.appid;
+                const launcher = card.dataset.launcher;
+                const game = state.currentGames.find(g => String(g.appid) === String(appid) && g.launcher === launcher);
+                if (game) {
+                    launchGame(game);
+                    showCustomNotification(`Lancement de ${game.name}...`);
+                }
+            }
+        });
+
+        // document.getElementById('back-btn').addEventListener('click', () => showView(dom.welcomeScreen));
+        // document.getElementById('devtools-back-btn').addEventListener('click', () => showView(dom.welcomeScreen));
+        // dom.settingsBackBtn.addEventListener('click', () => showView(dom.welcomeScreen));
+        // dom.settingsBtn.addEventListener('click', () => showView(dom.settingsView));
         dom.editModeBtn.addEventListener('click', toggleEditMode);
         dom.refreshSteamBtn.addEventListener('click', loadGames);
         document.getElementById('close-game-details-btn').addEventListener('click', () => {
@@ -1656,75 +1940,96 @@ async function loadAndRenderAchievements(game) {
             }
         });
 
-        dom.itemsContainer.addEventListener('click', async (e) => {
-            const isGamingView = dom.mainTitle.textContent === 'Ma Bibliothèque de Jeux';
+        document.body.addEventListener('click', async (e) => {
+    const isGamingView = dom.mainTitle.textContent.includes('Bibliothèque');
+    const isDevView = dom.mainTitle.textContent.includes('Projets');
 
-            if (isGamingView) {
+    if (isGamingView) {
+        const launchButton = e.target.closest('.game-card-launch-btn, .game-footer-play-btn');
+        const gameCard = e.target.closest('.game-card');
 
-                const gameCard = e.target.closest('.game-card');
-                if (!gameCard) return;
+        if (!launchButton && !gameCard) return;
 
-                const appid = gameCard.dataset.appid;
-                const launcher = gameCard.dataset.launcher;
-                const game = state.currentGames.find(g => String(g.appid) === String(appid) && g.launcher === launcher);
-                if (!game) return;
+        const clickedElement = launchButton || gameCard;
+        const appid = clickedElement.dataset.appid;
+        const launcher = clickedElement.dataset.launcher;
+        const game = state.currentGames.find(g => String(g.appid) === String(appid) && g.launcher === launcher);
 
-                if (e.target.closest('.game-card-launch-btn')) {
-                    launchGame(game);
-                    showCustomNotification(`Lancement de ${game.name}...`);
-                } else {
-                    openGameDetailsModal(game);
-                }
+        if (!game) return;
 
-             } else {
-                const button = e.target.closest('button');
-                if (!button) return;
-                const card = button.closest('.item-card');
-                if (!card) return;
-                const index = parseInt(card.dataset.index, 10);
-                const item = state.currentItems[index];
+        if (launchButton) {
+            e.stopPropagation();
+            launchGame(game);
+        } else if (gameCard) {
+            openGameDetailsModal(game);
+        }
+        return;
+    }
 
-                if (button.classList.contains('npm-script-btn')) {
-                    const script = button.dataset.script;
-                    if (item && item.path && script) {
-                        window.electronAPI.runNpmScript({ projectPath: item.path, script: script });
-                    }
-                } else if (button.classList.contains('launch-btn') && !state.isEditMode) {
-                    if (item && item.commands) {
-                        window.electronAPI.launchProject({ commands: item.commands, name: item.name });
-                        showCustomNotification(`Lancement de ${item.name}...`);
-                    }
-                } else if (button.classList.contains('action-btn')) {
-                    const action = button.dataset.action;
-                    if (item && item.path) {
-                        if (action.startsWith('git-')) {
-                            button.classList.add('loading');
-                            const command = action.replace('git-', '');
-                            const result = await window.electronAPI.gitCommand({ command, path: item.path });
-                            button.classList.remove('loading');
-                            if (result.success) {
-                                showCustomNotification(`Git ${command} réussi !`);
-                                renderItems();
-                            } else {
-                                showCustomNotification(`Erreur Git: ${result.message}`, 'error');
-                            }
-                        } else {
-                            window.electronAPI.projectAction({ action, path: item.path });
-                        }
-                    }
-                } else if (button.classList.contains('edit')) {
-                    openEditModal(index);
-                } else if (button.classList.contains('delete')) {
-                    const confirmed = await showConfirmationModal(`Êtes-vous sûr de vouloir supprimer "${item.name}" ?`);
-                    if (confirmed) {
-                        state.currentItems.splice(index, 1);
-                        window.electronAPI.saveItems({ filePath: state.currentFilePath, data: state.currentItems });
-                        showCustomNotification('Projet supprimé.', 'error');
+    if (isDevView) {
+        const card = e.target.closest('.item-card');
+        if (!card) return;
+
+        const index = parseInt(card.dataset.index, 10);
+        const item = state.currentItems[index];
+        if (!item) return;
+
+        if (e.target.closest('.pin-btn')) {
+            e.stopPropagation();
+            const indexInPinned = state.pinnedProjects.indexOf(index);
+            if (indexInPinned > -1) {
+                state.pinnedProjects.splice(indexInPinned, 1);
+            } else {
+                state.pinnedProjects.push(index);
+            }
+            await window.electronAPI.projectsSetPinned(state.pinnedProjects);
+            renderItems();
+            populateDashboard();
+
+        } else if (state.isEditMode && e.target.closest('.card-control-btn.edit')) {
+            openEditModal(index);
+
+        } else if (state.isEditMode && e.target.closest('.card-control-btn.delete')) {
+            const confirmed = await showConfirmationModal(`Êtes-vous sûr de vouloir supprimer "${item.name}" ?`);
+            if (confirmed) {
+                state.currentItems.splice(index, 1);
+                window.electronAPI.saveItems({ filePath: state.currentFilePath, data: state.currentItems });
+                showCustomNotification('Projet supprimé.', 'error');
+                renderItems();
+            }
+
+        } else if (e.target.closest('.launch-btn') && !state.isEditMode) {
+            if (item.commands) {
+                window.electronAPI.launchProject({ commands: item.commands, name: item.name });
+                showCustomNotification(`Lancement de ${item.name}...`);
+            }
+        } else if (e.target.closest('.action-btn')) {
+             const action = e.target.closest('.action-btn').dataset.action;
+             if (item.path) {
+                if (action.startsWith('git-')) {
+                    const button = e.target.closest('.action-btn');
+                    button.classList.add('loading');
+                    const command = action.replace('git-', '');
+                    const result = await window.electronAPI.gitCommand({ command, path: item.path });
+                    button.classList.remove('loading');
+                    if (result.success) {
+                        showCustomNotification(`Git ${command} réussi !`);
                         renderItems();
+                    } else {
+                        showCustomNotification(`Erreur Git: ${result.message}`, 'error');
                     }
+                } else {
+                    window.electronAPI.projectAction({ action, path: item.path });
                 }
             }
-        });
+        } else if (e.target.closest('.npm-script-btn')) {
+            const script = e.target.closest('.npm-script-btn').dataset.script;
+            if (item.path && script) {
+                window.electronAPI.runNpmScript({ projectPath: item.path, script: script });
+            }
+        }
+    }
+});
         
         const updateModal = document.getElementById('update-modal');
         const updateVersionEl = document.getElementById('update-version');

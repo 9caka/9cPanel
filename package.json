@@ -1,7 +1,7 @@
 {
   "name": "9cpanel",
-  "version": "1.10.7",
-  "description": "",
+  "version": "1.11.0",
+  "description": "Panel de développement et Gaming",
   "main": "main.js",
   "scripts": {
     "start": "electron .",

@@ -21,6 +21,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   projectAction: (payload) => ipcRenderer.send('project-action', payload),
   launchProject: (payload) => ipcRenderer.send('launch-project', payload),
   runNpmScript: (payload) => ipcRenderer.send('run-npm-script', payload),
+  projectsGetPinned: () => ipcRenderer.invoke('projects:get-pinned'),
+  projectsSetPinned: (pinned) => ipcRenderer.invoke('projects:set-pinned', pinned),
   
   // Commandes Git & Docker
   gitCommand: (payload) => ipcRenderer.invoke('git:command', payload),

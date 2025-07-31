@@ -9,3 +9,4 @@ src/data/scratchpad.txt
 src/data/snippets.json
 src/data/rawg_cache.json
 src/data/recently_played.json
+src/data/pinned_projects.json

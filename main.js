@@ -15,6 +15,7 @@ const yaml = require('js-yaml');
 const { parseStringPromise } = require('xml2js');
 const CACHE_FILE_PATH = path.join(__dirname, 'src/data/rawg_cache.json');
 const RECENTLY_PLAYED_PATH = path.join(__dirname, 'src/data/recently_played.json');
+const PINNED_PROJECTS_PATH = path.join(__dirname, 'src/data/pinned_projects.json');
 
 const openDatabases = new Map();
 
@@ -212,7 +213,7 @@ ipcMain.handle('get-project-details', async (event, projectPath) => {
             }
         }
     } catch (error) {
-        console.error(`Erreur lors de la récupération des détails pour ${projectPath}:`, error);
+        // console.error(`Erreur lors de la récupération des détails pour ${projectPath}:`, error);
     }
     return details;
 });
@@ -612,6 +613,9 @@ ipcMain.handle('games:get-xbox-games', async () => {
     const knownPaths = ['C:\\XboxGames', 'D:\\XboxGames', 'E:\\XboxGames', 'F:\\XboxGames'];
 
     try {
+        const cache = await loadCache();
+        let cacheUpdated = false;
+
         for (const xboxGamesPath of knownPaths) {
             if (fsSync.existsSync(xboxGamesPath)) {
                 const gameFolders = await fs.readdir(xboxGamesPath, { withFileTypes: true });
@@ -634,7 +638,14 @@ ipcMain.handle('games:get-xbox-games', async () => {
                                     const executable = executableNode.Name;
 
                                     const exePath = path.join(path.dirname(configPath), executable);
-                                    const details = await getGameDetailsFromRAWG(displayName);
+                                    let details;
+                                    if (cache[displayName]) {
+                                        details = cache[displayName];
+                                    } else {
+                                        details = await getGameDetailsFromRAWG(displayName);
+                                        cache[displayName] = details;
+                                        cacheUpdated = true;
+                                    }
 
                                     games.push({ 
                                         launcher: 'xbox', 
@@ -653,8 +664,13 @@ ipcMain.handle('games:get-xbox-games', async () => {
                 }
             }
         }
+        if (cacheUpdated) {
+            await saveCache(cache);
+        }
+
     } catch (error) {}
     
+
     return { success: true, games };
 });
 
@@ -812,6 +828,25 @@ ipcMain.handle('games:record-launch', async (event, gameToRecord) => {
         return { success: true };
     } catch (error) {
         console.error('Erreur lors de l\'enregistrement du jeu lancé:', error);
+        return { success: false };
+    }
+});
+
+ipcMain.handle('projects:get-pinned', async () => {
+  try {
+    const data = await fs.readFile(PINNED_PROJECTS_PATH, 'utf-8');
+    return JSON.parse(data);
+  } catch (error) {
+    return [];
+  }
+});
+
+ipcMain.handle('projects:set-pinned', async (event, pinnedProjects) => {
+    try {
+        await fs.writeFile(PINNED_PROJECTS_PATH, JSON.stringify(pinnedProjects, null, 2));
+        return { success: true };
+    } catch (error) {
+        console.error('Erreur de sauvegarde des projets épinglés:', error);
         return { success: false };
     }
 });

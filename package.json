@@ -18,6 +18,7 @@
     "@octokit/rest": "^22.0.0",
     "axios": "^1.10.0",
     "dotenv": "^17.2.0",
+    "electron-log": "^5.4.2",
     "electron-updater": "^6.6.2",
     "js-yaml": "^4.1.0",
     "os-utils": "^0.0.14",
@@ -31,6 +32,7 @@
   "build": {
     "appId": "com.9cBinks.9cpanel",
     "productName": "9cpanel",
+    "artifactName": "${productName}-Setup-${version}.${ext}",
     "win": {
       "target": "nsis",
       "icon": "src/assets/icon.ico"

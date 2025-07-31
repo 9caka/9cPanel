@@ -11,6 +11,7 @@ const semver = require('semver');
 const dotenv = require('dotenv');
 const axios = require('axios'); 
 const { autoUpdater } = require('electron-updater');
+const log = require('electron-log');
 const yaml = require('js-yaml');
 const { parseStringPromise } = require('xml2js');
 const CACHE_FILE_PATH = path.join(__dirname, 'src/data/rawg_cache.json');
@@ -850,6 +851,9 @@ ipcMain.handle('projects:set-pinned', async (event, pinnedProjects) => {
         return { success: false };
     }
 });
+
+log.transports.file.level = 'info';
+autoUpdater.logger = log;
 
 autoUpdater.on('checking-for-update', () => {
     console.log('Vérification des mises à jour...');

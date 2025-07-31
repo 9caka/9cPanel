@@ -31,6 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
             confirmOkBtn: document.getElementById('confirm-ok-btn'),
             confirmCancelBtn: document.getElementById('confirm-cancel-btn'),
             projectSearchInput: document.getElementById('project-search-input'),
+            sortOptions: document.getElementById('sort-options'),
+            launcherFilters: document.getElementById('launcher-filters'),
+            gameLibraryControls: document.getElementById('game-library-controls'),
         };
 
         const state = {
@@ -41,6 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
             settings: { theme: 'dark', accentColor: '#2563eb' },
             devToolsInitialized: false,
             settingsInitialized: false,
+            activeFilter: 'all',
+            activeSort: 'default',
         };
 
        function showCustomNotification(message, type = 'success') {
@@ -1224,70 +1229,173 @@ document.addEventListener('DOMContentLoaded', () => {
             loadProjects();
         }
 
-    async function loadSteamGames() {
-            dom.mainTitle.textContent = 'Ma Bibliothèque Steam';
-            dom.editModeBtn.style.display = 'none';
-            dom.refreshSteamBtn.style.display = 'block';
-            dom.itemsContainer.innerHTML = `<p class="text-center col-span-full text-tertiary">Chargement de vos jeux Steam...</p>`;
+async function loadGames() {
+    dom.mainTitle.textContent = 'Ma Bibliothèque de Jeux';
+    dom.editModeBtn.style.display = 'none';
+    dom.refreshSteamBtn.style.display = 'block';
 
-            try {
-                const [ownedGamesResult, installedAppsResult] = await Promise.all([
-                    window.electronAPI.steamGetOwnedGames(),
-                    window.electronAPI.steamGetInstalledApps()
-                ]);
+    showSkeletonLoaders();
 
-                if (!ownedGamesResult.success) throw new Error(ownedGamesResult.error);
-                
-                const installedAppIds = installedAppsResult.success ? installedAppsResult.appids : [];
-                
-                state.currentGames = ownedGamesResult.games.map(game => ({
-                    ...game,
-                    is_installed: installedAppIds.includes(String(game.appid))
-                }));
+    try {
+        const results = await Promise.allSettled([
+            window.electronAPI.steamGetOwnedGames(),
+            window.electronAPI.steamGetInstalledApps(),
+            window.electronAPI.gamesGetEpicGames(),
+            window.electronAPI.gamesGetUbisoftGames(),
+            window.electronAPI.gamesGetXboxGames()
+        ]);
 
-                renderSteamGames();
+        const [
+            steamResult,
+            installedSteamResult,
+            epicResult,
+            ubisoftResult,
+            xboxResult
+        ] = results;
 
-            } catch (error) {
-                state.currentGames = [];
-                dom.itemsContainer.innerHTML = `<p class="text-center col-span-full text-red-400">Erreur: ${error.message}<br>Veuillez configurer votre clé d'API et votre SteamID dans les paramètres, et assurez-vous que votre profil est public.</p>`;
+        let allGames = [];
+   
+        if (steamResult.status === 'fulfilled' && steamResult.value.success) {
+            const installedAppIds = (installedSteamResult.status === 'fulfilled' && installedSteamResult.value.success) ? installedSteamResult.value.appids : [];
+            const steamGames = steamResult.value.games.map(game => ({
+                ...game,
+                launcher: 'steam',
+                is_installed: installedAppIds.includes(String(game.appid))
+            })).filter(game => game.is_installed);
+            allGames.push(...steamGames);
+        }
+
+        if (epicResult.status === 'fulfilled' && epicResult.value.success) {
+            allGames.push(...epicResult.value.games);
+        }
+
+        if (ubisoftResult.status === 'fulfilled' && ubisoftResult.value.success) {
+            allGames.push(...ubisoftResult.value.games);
+        }
+
+        if (xboxResult.status === 'fulfilled' && xboxResult.value.success) {
+            allGames.push(...xboxResult.value.games);
+        }
+        
+        const uniqueGames = [];
+        const seenNames = new Set();
+        
+        allGames.sort((a,b) => (a.launcher === 'steam' ? -1 : 1));
+        
+        for (const game of allGames) {
+            if (!seenNames.has(game.name.toLowerCase())) {
+                uniqueGames.push(game);
+                seenNames.add(game.name.toLowerCase());
             }
         }
 
-       function renderSteamGames() {
-            if (!state.currentGames) return;
+        state.currentGames = uniqueGames;
+        displayGames();
 
-            const searchTerm = dom.projectSearchInput.value.toLowerCase();
-            const gamesToRender = state.currentGames.filter(game => game && game.name && game.name.toLowerCase().includes(searchTerm));
-            
-            gamesToRender.sort((a, b) => b.playtime_forever - a.playtime_forever);
+    } catch (error) {
+        state.currentGames = [];
+        dom.itemsContainer.innerHTML = `<p class="text-center col-span-full text-red-400">Erreur critique lors du chargement des jeux : ${error.message}</p>`;
+    }
+}
+
+        async function displayGames() { 
+           if (!state.currentGames) return;
+
+           let gamesToDisplay = [...state.currentGames];
+           const searchTerm = dom.projectSearchInput.value.toLowerCase();
+
+           if (state.activeFilter !== 'all') {
+               gamesToDisplay = gamesToDisplay.filter(game => game.launcher === state.activeFilter);
+           }
+
+           if (searchTerm) {
+               gamesToDisplay = gamesToDisplay.filter(game => game.name.toLowerCase().includes(searchTerm));
+           }
+
+            const recentlyPlayed = await window.electronAPI.gamesGetRecentlyPlayed();
+            const launchOrder = recentlyPlayed.reduce((acc, item, index) => {
+                acc[item.id] = index;
+                return acc;
+            }, {});
+
+            switch (state.activeSort) {
+                case 'last_launched':
+                    gamesToDisplay.sort((a, b) => {
+                        const aId = `${a.launcher}_${a.appid}`;
+                        const bId = `${b.launcher}_${b.appid}`;
+                        const aOrder = launchOrder[aId] ?? Infinity;
+                        const bOrder = launchOrder[bId] ?? Infinity;
+                        return aOrder - bOrder;
+                    });
+                    break;
+                case 'name_asc':
+                    gamesToDisplay.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'name_desc':
+                    gamesToDisplay.sort((a, b) => b.name.localeCompare(a.name));
+                    break;
+                case 'launcher':
+                    gamesToDisplay.sort((a, b) => a.launcher.localeCompare(b.launcher));
+                    break;
+                case 'default':
+                default:
+                    gamesToDisplay.sort((a, b) => {
+                        if (a.is_installed !== b.is_installed) return a.is_installed ? -1 : 1;
+                        return (b.playtime_forever || 0) - (a.playtime_forever || 0);
+                    });
+                    break;
+            }
 
             dom.itemsContainer.innerHTML = '';
-            if (gamesToRender.length === 0) {
-                dom.itemsContainer.innerHTML = `<p class="text-center col-span-full text-tertiary">${searchTerm ? 'Aucun jeu ne correspond à votre recherche.' : 'Aucun jeu trouvé.'}</p>`;
+            if (gamesToDisplay.length === 0) {
+                dom.itemsContainer.innerHTML = `<p class="text-center col-span-full text-tertiary">Aucun jeu ne correspond à vos critères.</p>`;
                 return;
             }
 
-            gamesToRender.forEach(game => {
-                const card = document.createElement('div');
-                card.className = `game-card ${game.is_installed ? 'is-installed' : 'not-installed'}`;
-                card.dataset.appid = game.appid;
-                const playtimeHours = game.playtime_forever ? (game.playtime_forever / 60).toFixed(1) : '0.0';
+           gamesToDisplay.forEach(game => {
+               const card = document.createElement('div');
+               card.className = `game-card ${game.is_installed ? 'is-installed' : 'not-installed'}`;
+               card.dataset.appid = game.appid;
+               card.dataset.launcher = game.launcher;
 
-                card.innerHTML = `
-                    <div class="game-card-banner" style="background-image: url('${game.banner_url}')">
-                        ${game.is_installed ? '<div class="installed-badge">Installé</div>' : ''}
-                    </div>
-                    <div class="game-card-content">
-                        <h3 class="game-card-title">${game.name}</h3>
-                        <p class="game-card-playtime">${playtimeHours} heures de jeu</p>
-                        <button class="game-card-launch-btn" data-appid="${game.appid}">Lancer le jeu</button>
-                    </div>
-                `;
-                dom.itemsContainer.appendChild(card);
-            });
-        }
+               const playtimeHours = (game.playtime_forever || 0) > 0 ? (game.playtime_forever / 60).toFixed(1) : '0.0';
 
-async function openGameDetailsModal(appid) {
+               let launcherIcon = '';
+               switch (game.launcher) {
+                   case 'steam': launcherIcon = '<i class="fab fa-steam absolute bottom-2 right-2 text-white/70"></i>'; break;
+                   case 'epic': launcherIcon = '<i class="fa-solid fa-e absolute bottom-2 right-2 text-white/70"></i>'; break;
+                   case 'ubisoft': launcherIcon = '<i class="fa-brands fa-ubisoft absolute bottom-2 right-2 text-white/70"></i>'; break;
+                   case 'xbox': launcherIcon = '<i class="fab fa-xbox absolute bottom-2 right-2 text-white/70"></i>'; break;
+               }
+
+               const bannerStyle = game.banner_url ? `background-image: url('${game.banner_url}')` : 'background-color: #2a2a2a;';
+
+               card.innerHTML = `
+            <div class="game-card-banner" style="${bannerStyle}">
+                ${game.is_installed ? '<div class="installed-badge">Installé</div>' : ''}
+                ${launcherIcon}
+            </div>
+            <div class="game-card-content">
+                <h3 class="game-card-title">${game.name}</h3>
+                <p class="game-card-playtime">${playtimeHours} heures de jeu</p>
+                <button class="game-card-launch-btn" data-appid="${game.appid}" data-launcher="${game.launcher}">Lancer le jeu</button>
+            </div>
+        `;
+               dom.itemsContainer.appendChild(card);
+           });
+       }
+
+       function formatDataArray(arr) {
+    if (!arr || arr.length === 0) {
+        return 'N/A';
+    }
+    if (typeof arr[0] === 'string') {
+        return arr.join(', ');
+    }
+    return arr.map(item => item.name || item.description).join(', ');
+}
+
+async function openGameDetailsModal(game) {
     const modal = document.getElementById('game-details-modal');
     const contentEl = document.getElementById('game-details-content');
     
@@ -1295,108 +1403,146 @@ async function openGameDetailsModal(appid) {
     contentEl.innerHTML = '<p class="text-center text-tertiary p-10">Chargement des détails...</p>';
 
     try {
-        const result = await window.electronAPI.steamGetGameDetails(appid);
-        if (result.success) {
-            const details = result.details;
-            const gameData = state.currentGames.find(g => g.appid == appid);
-            const playtimeHours = (gameData?.playtime_forever / 60 || 0).toFixed(1);
-
-            const genres = details.genres ? details.genres.map(g => `<span class="game-details-tag">${g.description}</span>`).join('') : '';
-            const categories = details.categories ? details.categories.map(c => `<span class="game-details-tag">${c.description}</span>`).join('') : '';
-            const screenshots = details.screenshots ? details.screenshots.slice(0, 4).map(s => `<img src="${s.path_thumbnail}" alt="Screenshot">`).join('') : '';
-
-            contentEl.innerHTML = `
-                <div class="game-details-header">
-                    <div class="game-details-background" style="background-image: url('${details.background_raw || details.header_image}')"></div>
-                    <div class="game-details-header-content">
-                        <img src="${details.header_image}" class="game-details-logo">
-                        <div class="game-details-title-section">
-                            <h1>${details.name}</h1>
-                            <p>${details.release_date ? details.release_date.date : ''} - ${details.platforms.windows ? 'PC (Windows)' : ''}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="game-details-body">
-                    <div class="game-details-left">
-                        <h3 class="game-details-section-title">Vue d'ensemble</h3>
-                        <div class="game-details-description">${details.detailed_description}</div>
-                        <div class="game-details-screenshots">${screenshots}</div>
-                        <h3 id="achievements-title" class="game-details-section-title mt-6">Succès</h3>
-                        <div id="game-details-achievements-container" class="game-details-achievements">
-                            <p class="text-tertiary">Chargement des succès...</p>
-                        </div>
-                    </div>
-                    <div class="game-details-right">
-                        <h3 class="game-details-section-title">Propriétés</h3>
-                        <div class="game-details-properties">
-                            <div class="prop-item"><span class="prop-key">Développeur</span><span class="prop-value">${details.developers ? details.developers.join(', ') : 'N/A'}</span></div>
-                            <div class="prop-item"><span class="prop-key">Éditeur</span><span class="prop-value">${details.publishers ? details.publishers.join(', ') : 'N/A'}</span></div>
-                            <div class="prop-item"><span class="prop-key">Temps de jeu</span><span class="prop-value">${playtimeHours} heures</span></div>
-                        </div>
-                        <h3 class="game-details-section-title mt-6">Genres</h3>
-                        <div class="game-details-tags">${genres}</div>
-                        <h3 class="game-details-section-title mt-6">Fonctionnalités</h3>
-                        <div class="game-details-tags">${categories}</div>
-                    </div>
-                </div>
-
-                <div class="game-details-footer">
-                    <div class="flex items-center gap-3">
-                        <button class="game-footer-btn" data-link="https://store.steampowered.com/app/${appid}">Page Steam</button>
-                        <button class="game-footer-btn" data-link="https://steamcommunity.com/app/${appid}">Communauté</button>
-                        <button id="scroll-to-achievements-btn" class="game-footer-btn">Succès</button>
-                    </div>
-                    <button class="btn-primary !py-3 !px-6 game-card-launch-btn game-footer-play-btn" data-appid="${appid}"><i class="fas fa-play mr-2"></i> Jouer</button>
-                </div>
-            `;
-
-            loadAndRenderAchievements(appid);
-
-            contentEl.querySelectorAll('[data-link]').forEach(link => {
-                link.addEventListener('click', () => window.electronAPI.openExternalLink(link.dataset.link));
-            });
-            contentEl.querySelector('.game-card-launch-btn').addEventListener('click', (e) => {
-                const appId = e.currentTarget.dataset.appid;
-                if (appId) window.electronAPI.steamLaunchGame(appId);
-            });
-            contentEl.querySelector('#scroll-to-achievements-btn').addEventListener('click', () => {
-                document.getElementById('achievements-title').scrollIntoView({ behavior: 'smooth' });
-            });
-
+        let rawDetails;
+        
+        if (game.launcher === 'steam') {
+            const result = await window.electronAPI.steamGetGameDetails(game.appid);
+            if (!result.success) throw new Error(result.error);
+            rawDetails = result.details;
+        } else if (game.rawg_id) {
+            const result = await window.electronAPI.gamesGetRawgDetails(game.rawg_id);
+            if (!result.success) throw new Error(result.error);
+            rawDetails = result.details;
         } else {
-            throw new Error(result.error);
+             throw new Error("Source de détails inconnue pour ce jeu.");
         }
+
+        const details = {
+            name: rawDetails.name || 'Titre Inconnu',
+            header_image: rawDetails.header_image || rawDetails.background_image,
+            description: rawDetails.detailed_description || rawDetails.description,
+            release_date: rawDetails.release_date?.date || rawDetails.released,
+            developers: formatDataArray(rawDetails.developers),
+            publishers: formatDataArray(rawDetails.publishers),
+            genres: formatDataArray(rawDetails.genres),
+            features: formatDataArray(rawDetails.categories || rawDetails.tags)
+        };
+
+        contentEl.innerHTML = `
+            <div class="game-details-header">
+                <div class="game-details-background" style="background-image: url('${details.header_image}')"></div>
+                <div class="game-details-header-content">
+                    <img src="${details.header_image}" class="game-details-logo">
+                    <div class="game-details-title-section">
+                        <h1>${details.name}</h1>
+                        <p>${details.release_date || ''} - ${details.publishers || ''}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="game-details-body">
+                <div class="game-details-left p-8">
+                     <h3 class="game-details-section-title">Description</h3>
+                     <div class="game-details-description">${details.description || 'Pas de description.'}</div>
+                     <h3 id="achievements-title" class="game-details-section-title mt-6">Succès</h3>
+                     <div id="game-details-achievements-container" class="game-details-achievements"></div>
+                </div>
+                <div class="game-details-right p-8 border-l border-primary">
+                    <h3 class="game-details-section-title">Propriétés</h3>
+                    <div class="game-details-properties">
+                        <div class="prop-item"><span class="prop-key">Développeur</span><span class="prop-value">${details.developers}</span></div>
+                        <div class="prop-item"><span class="prop-key">Éditeur</span><span class="prop-value">${details.publishers}</span></div>
+                    </div>
+                    <h3 class="game-details-section-title mt-6">Genres</h3>
+                    <div class="game-details-tags">${details.genres}</div>
+                    <h3 class="game-details-section-title mt-6">Fonctionnalités</h3>
+                    <div class="game-details-tags">${details.features}</div>
+                </div>
+            </div>
+             <div class="game-details-footer">
+                <button class="btn-primary !py-3 !px-6 game-footer-play-btn" 
+                        data-appid="${game.appid}" 
+                        data-launcher="${game.launcher}">
+                    <i class="fas fa-play mr-2"></i> Jouer
+                </button>
+            </div>
+        `;
+        
+        loadAndRenderAchievements(game);
+
     } catch (error) {
         contentEl.innerHTML = `<p class="text-center text-red-400 p-10">Impossible de charger les détails : ${error.message}</p>`;
     }
 }
 
-async function loadAndRenderAchievements(appid) {
+async function loadAndRenderAchievements(game) {
     const container = document.getElementById('game-details-achievements-container');
+    if (!container) return;
+
+    container.innerHTML = '<p class="text-tertiary">Chargement des succès...</p>';
+
     try {
-        const result = await window.electronAPI.steamGetPlayerAchievements(appid);
+        let result;
+        if (game.launcher === 'steam') {
+            result = await window.electronAPI.steamGetPlayerAchievements(game.appid);
+        } else if (game.rawg_id) {
+            result = await window.electronAPI.gamesGetRawgAchievements(game.rawg_id);
+        } else {
+            throw new Error("Impossible de trouver une source pour les succès.");
+        }
+
         if (result.success && result.achievements.length > 0) {
             container.innerHTML = '';
             result.achievements.forEach(ach => {
                 const item = document.createElement('div');
                 item.className = `achievement-item ${ach.unlocked ? 'unlocked' : 'locked'}`;
                 item.innerHTML = `
-                    <img src="${ach.icon}" class="achievement-icon" alt="${ach.name}">
+                    <img src="${ach.icon}" class="achievement-icon" alt="${ach.name}" onerror="this.style.display='none'">
                     <div class="achievement-details">
                         <h4>${ach.name}</h4>
-                        <p>${ach.description || 'Succès secret'}</p>
+                        <p>${ach.description || 'Pas de description.'}</p>
                     </div>
                 `;
                 container.appendChild(item);
             });
         } else {
-            container.innerHTML = `<p class="text-tertiary">${result.error || 'Ce jeu n\'a pas de succès.'}</p>`;
+            container.innerHTML = `<p class="text-tertiary">${result.error || 'Ce jeu n\'a pas de succès listés.'}</p>`;
         }
     } catch (error) {
-        container.innerHTML = `<p class="text-red-400">Erreur de chargement des succès.</p>`;
+        container.innerHTML = `<p class="text-red-400">Erreur de chargement des succès : ${error.message}</p>`;
     }
 }
+
+        dom.sortOptions.addEventListener('change', () => {
+            state.activeSort = dom.sortOptions.value;
+            displayGames();
+        });
+
+        dom.launcherFilters.addEventListener('click', (e) => {
+            const filterBtn = e.target.closest('.filter-btn');
+            if (!filterBtn) return;
+
+            dom.launcherFilters.querySelector('.active').classList.remove('active');
+            filterBtn.classList.add('active');
+
+            state.activeFilter = filterBtn.dataset.filter;
+            displayGames();
+        });
+
+        function showSkeletonLoaders(count = 12) {
+            dom.itemsContainer.innerHTML = '';
+            for (let i = 0; i < count; i++) {
+                const skeletonCard = document.createElement('div');
+                skeletonCard.className = 'skeleton-card';
+                skeletonCard.innerHTML = `
+            <div class="skeleton-banner shimmer"></div>
+            <div class="skeleton-content">
+                <div class="skeleton-title shimmer"></div>
+                <div class="skeleton-text shimmer"></div>
+            </div>
+        `;
+                dom.itemsContainer.appendChild(skeletonCard);
+            }
+        }
 
         document.getElementById('min-btn').addEventListener('click', () => window.electronAPI.minimizeWindow());
         document.getElementById('max-btn').addEventListener('click', () => window.electronAPI.maximizeWindow());
@@ -1411,6 +1557,7 @@ async function loadAndRenderAchievements(appid) {
                         loadItems('src/data/projects-dev.json', 'Mes Projets de Développement');
                         dom.editModeBtn.style.display = 'block';
                         dom.refreshSteamBtn.style.display = 'none';
+                        dom.gameLibraryControls.style.display = 'none'; 
                     } else if (button.id === 'devtools-btn') {
                         showView(dom.devtoolsView);
                         if (!state.devToolsInitialized) {
@@ -1418,7 +1565,8 @@ async function loadAndRenderAchievements(appid) {
                         }
                     } else if (button.id === 'gaming-btn') {
                         showView(dom.mainContent);
-                        loadSteamGames();
+                        loadGames();
+                        dom.gameLibraryControls.style.display = 'flex';
                     }
                 }, 250);
             });
@@ -1429,14 +1577,14 @@ async function loadAndRenderAchievements(appid) {
         dom.settingsBtn.addEventListener('click', () => showView(dom.settingsView));
         dom.settingsBackBtn.addEventListener('click', () => showView(dom.welcomeScreen));
         dom.editModeBtn.addEventListener('click', toggleEditMode);
-        dom.refreshSteamBtn.addEventListener('click', loadSteamGames);
+        dom.refreshSteamBtn.addEventListener('click', loadGames);
         document.getElementById('close-game-details-btn').addEventListener('click', () => {
             dom.gameDetailsModal.classList.add('is-inactive');
         });
 
         dom.projectSearchInput.addEventListener('input', () => {
-            if (dom.mainTitle.textContent === 'Ma Bibliothèque Steam') {
-                renderSteamGames();
+            if (dom.mainTitle.textContent === 'Ma Bibliothèque de Jeux') {
+                displayGames();
             } else {
                 renderItems();
             }
@@ -1484,23 +1632,51 @@ async function loadAndRenderAchievements(appid) {
             closeEditModal();
         });
 
+        function launchGame(game) {
+            if (!game) return;
+            window.electronAPI.gamesRecordLaunch(game);
+            switch (game.launcher) {
+                case 'steam': window.electronAPI.steamLaunchGame(game.appid); break;
+                case 'epic': window.electronAPI.epicLaunchGame(game.appid); break;
+                case 'ubisoft': window.electronAPI.ubisoftLaunchGame(game.appid); break;
+                case 'xbox': window.electronAPI.xboxLaunchGame({ exePath: game.appid, cwd: game.workingDir }); break;
+            }
+        }
+
+        dom.gameDetailsModal.addEventListener('click', (e) => {
+            const launchButton = e.target.closest('.game-footer-play-btn');
+            if (launchButton) {
+                const appid = launchButton.dataset.appid;
+                const launcher = launchButton.dataset.launcher;
+                const game = state.currentGames.find(g => String(g.appid) === String(appid) && g.launcher === launcher);
+                if (game) {
+                    launchGame(game);
+                    showCustomNotification(`Lancement de ${game.name}...`);
+                }
+            }
+        });
+
         dom.itemsContainer.addEventListener('click', async (e) => {
-            const isGamingView = dom.mainTitle.textContent === 'Ma Bibliothèque Steam';
+            const isGamingView = dom.mainTitle.textContent === 'Ma Bibliothèque de Jeux';
 
             if (isGamingView) {
-                const launchButton = e.target.closest('.game-card-launch-btn');
-                if (launchButton) {
-                    const appId = launchButton.dataset.appid;
-                    if (appId) window.electronAPI.steamLaunchGame(appId);
-                    return;
-                }
+
                 const gameCard = e.target.closest('.game-card');
-                if (gameCard) {
-                    const appid = gameCard.dataset.appid;
-                    if (appid) openGameDetailsModal(appid);
-                    return;
+                if (!gameCard) return;
+
+                const appid = gameCard.dataset.appid;
+                const launcher = gameCard.dataset.launcher;
+                const game = state.currentGames.find(g => String(g.appid) === String(appid) && g.launcher === launcher);
+                if (!game) return;
+
+                if (e.target.closest('.game-card-launch-btn')) {
+                    launchGame(game);
+                    showCustomNotification(`Lancement de ${game.name}...`);
+                } else {
+                    openGameDetailsModal(game);
                 }
-            } else {
+
+             } else {
                 const button = e.target.closest('button');
                 if (!button) return;
                 const card = button.closest('.item-card');
@@ -1550,8 +1726,6 @@ async function loadAndRenderAchievements(appid) {
             }
         });
         
-        loadAndApplySettings();
-
         const updateModal = document.getElementById('update-modal');
         const updateVersionEl = document.getElementById('update-version');
         const updateNotesEl = document.getElementById('update-notes');
@@ -1595,6 +1769,8 @@ async function loadAndRenderAchievements(appid) {
             };
             updateLaterBtn.textContent = 'Plus tard';
         });
+
+        loadAndApplySettings();
 
     } catch (error) {
         console.error("Critical error during initialization:", error);

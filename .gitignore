@@ -7,3 +7,5 @@ src/data/todos.json
 src/data/rss-feeds.json
 src/data/scratchpad.txt
 src/data/snippets.json
+src/data/rawg_cache.json
+src/data/recently_played.json

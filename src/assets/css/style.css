@@ -1,6 +1,3 @@
-/* Fichier à placer dans : MonPanel/src/assets/css/style.css */
-
-/* --- Système de Thème --- */
 :root {
     --accent-color: #2563eb;
     --accent-color-translucent: rgba(37, 99, 235, 0.1);
@@ -28,7 +25,6 @@ html[data-theme='light'] {
     --color-text-tertiary: #6b7280;
 }
 
-/* --- Classes utilitaires pour le thème --- */
 .bg-primary {
     background-color: var(--color-bg-primary);
 }
@@ -142,7 +138,6 @@ body {
     color: #ffffff;
 }
 
-/* Logique de visibilité pour le fondu */
 .view-container,
 .modal-overlay,
 .tool-content {
@@ -820,12 +815,10 @@ html[data-theme="light"] .theme-toggle-label .fa-moon {
 
 .notification-toast.success {
     border-color: #10b981;
-    /* Vert */
 }
 
 .notification-toast.error {
     border-color: #ef4444;
-    /* Rouge */
 }
 
 .notification-toast i {
@@ -863,7 +856,6 @@ html[data-theme="light"] .theme-toggle-label .fa-moon {
     }
 }
 
-/* NOUVEAU : Styles pour le widget Docker */
 .docker-container-list {
     max-height: 400px;
     overflow-y: auto;
@@ -1089,7 +1081,7 @@ html[data-theme="light"] .theme-toggle-label .fa-moon {
 .rss-article-title {
     font-weight: 600;
     color: var(--color-text-main);
-    display: block; /* Pour que le lien prenne toute la largeur */
+    display: block;
 }
 
 .rss-article-snippet {
@@ -1260,7 +1252,25 @@ html[data-theme="light"] .theme-toggle-label .fa-moon {
     border-color: var(--accent-color);
 }
 
-/* NOUVEAU : Styles pour le modal de détails de jeu */
+.game-footer-play-btn {
+    margin-top: auto;
+    width: 100%;
+    background-color: var(--color-bg-tertiary);
+    color: var(--color-text-secondary);
+    border: 1px solid var(--color-border-primary);
+    padding: 0.6rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.game-footer-play-btn:hover {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
 .game-details-header {
     position: relative;
     height: 300px;
@@ -1486,4 +1496,114 @@ html[data-theme="light"] .theme-toggle-label .fa-moon {
 .theme-editor-input::-moz-color-swatch {
     border-radius: 50%;
     border: 2px solid var(--color-border-secondary);
+}
+
+.filter-btn {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    color: var(--color-text-tertiary);
+    transition: all 0.2s ease-in-out;
+}
+
+.filter-btn:hover {
+    color: var(--color-text-main);
+    background-color: var(--color-bg-tertiary);
+}
+
+.filter-btn.active {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.skeleton-card {
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-primary);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.skeleton-banner {
+    height: 150px;
+    background-color: var(--color-bg-tertiary);
+}
+
+.skeleton-content {
+    padding: 1rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.skeleton-title {
+    height: 20px;
+    width: 70%;
+    background-color: var(--color-bg-tertiary);
+    border-radius: 0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.skeleton-text {
+    height: 16px;
+    width: 40%;
+    background-color: var(--color-bg-tertiary);
+    border-radius: 0.25rem;
+}
+
+.shimmer {
+    position: relative;
+    overflow: hidden;
+}
+
+.shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 150%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    animation: shimmer-effect 1.5s infinite linear;
+}
+
+@keyframes shimmer-effect {
+    from {
+        left: -150%;
+    }
+    to {
+        left: 150%;
+    }
+}
+
+.game-card {
+    opacity: 0;
+    animation: card-enter 0.4s ease-out forwards;
+}
+
+@keyframes card-enter {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.game-details-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60%;
+    background: linear-gradient(to top, var(--color-bg-primary), transparent);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.game-details-header-content {
+    z-index: 2;
 }

@@ -11,6 +11,10 @@ const semver = require('semver');
 const dotenv = require('dotenv');
 const axios = require('axios'); 
 const { autoUpdater } = require('electron-updater');
+const yaml = require('js-yaml');
+const { parseStringPromise } = require('xml2js');
+const CACHE_FILE_PATH = path.join(__dirname, 'src/data/rawg_cache.json');
+const RECENTLY_PLAYED_PATH = path.join(__dirname, 'src/data/recently_played.json');
 
 const openDatabases = new Map();
 
@@ -387,6 +391,7 @@ ipcMain.handle('steam:get-owned-games', async () => {
 
         if (response.data && response.data.response && response.data.response.games) {
             const games = response.data.response.games.map(game => ({
+                launcher: 'steam',
                 appid: game.appid,
                 name: game.name,
                 playtime_forever: game.playtime_forever,
@@ -400,12 +405,6 @@ ipcMain.handle('steam:get-owned-games', async () => {
     } catch (error) {
         console.error("Erreur API Steam:", error.message);
         return { success: false, error: error.message };
-    }
-});
-
-ipcMain.on('steam:launch-game', (event, appId) => {
-    if (appId) {
-        shell.openExternal(`steam://run/${appId}`);
     }
 });
 
@@ -492,6 +491,243 @@ ipcMain.handle('steam:get-player-achievements', async (event, appid) => {
     }
 });
 
+ipcMain.handle('games:get-epic-games', async () => {
+    try {
+        const cache = await loadCache();
+        let cacheUpdated = false;
+
+        const manifestsPath = 'C:\\ProgramData\\Epic\\EpicGamesLauncher\\Data\\Manifests';
+        if (!fsSync.existsSync(manifestsPath)) return { success: true, games: [] };
+
+        const files = await fs.readdir(manifestsPath);
+        const itemFiles = files.filter(f => f.endsWith('.item'));
+        
+        const gamesPromises = itemFiles.map(async (file) => {
+            try {
+                const content = await fs.readFile(path.join(manifestsPath, file), 'utf-8');
+                const manifest = JSON.parse(content);
+
+                if (manifest.DisplayName && manifest.InstallLocation && manifest.AppName) {
+                    let details;
+                    if (cache[manifest.DisplayName]) {
+                        details = cache[manifest.DisplayName];
+                    } else {
+                        details = await getGameDetailsFromRAWG(manifest.DisplayName);
+                        cache[manifest.DisplayName] = details;
+                        cacheUpdated = true;
+                    }
+
+                    return {
+                        launcher: 'epic',
+                        appid: manifest.AppName,
+                        name: manifest.DisplayName,
+                        path: manifest.InstallLocation,
+                        is_installed: true,
+                        banner_url: details.banner_url,
+                        rawg_id: details.rawg_id
+                    };
+                }
+            } catch { return null; }
+        });
+
+        const games = (await Promise.all(gamesPromises)).filter(g => g);
+
+        if (cacheUpdated) {
+            await saveCache(cache);
+        }
+
+        return { success: true, games };
+    } catch (error) {
+        console.error("Erreur détection Epic:", error.message);
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('games:get-ubisoft-games', async () => {
+    try {
+        const cache = await loadCache();
+        let cacheUpdated = false;
+        const configPath = path.join(process.env.LOCALAPPDATA, 'Ubisoft Game Launcher', 'settings.yml');
+        if (!fsSync.existsSync(configPath)) return { success: true, games: [] };
+
+        const fileContents = await fs.readFile(configPath, 'utf8');
+        const config = yaml.load(fileContents);
+        
+        const gamesList = [];
+        const installs = config?.user?.game_settings || {};
+
+        for (const gameId in installs) {
+            const gameData = installs[gameId];
+            if (gameData?.path) {
+                const gamePath = gameData.path.replace(/\//g, '\\');
+                const gameName = path.basename(gamePath);
+                let details;
+                if (cache[gameName]) {
+                    details = cache[gameName];
+                } else {
+                    details = await getGameDetailsFromRAWG(gameName);
+                    cache[gameName] = details;
+                    cacheUpdated = true;
+                }
+
+                gamesList.push({
+                    launcher: 'ubisoft',
+                    appid: gameId,
+                    name: gameName,
+                    path: gamePath,
+                    is_installed: true,
+                    banner_url: details.banner_url,
+                    rawg_id: details.rawg_id
+                });
+            }
+        }
+        if (cacheUpdated) {
+        await saveCache(cache);
+    }
+        return { success: true, games: gamesList };
+    } catch (error) {
+        console.error("Erreur détection Ubisoft:", error.message);
+        return { success: false, error: error.message };
+    }
+});
+
+async function findConfigFile(dir) {
+    try {
+        const entries = await fs.readdir(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                const result = await findConfigFile(fullPath);
+                if (result) return result;
+            } else if (entry.name.toLowerCase() === 'microsoftgame.config') {
+                return fullPath;
+            }
+        }
+    } catch (e) {}
+    return null;
+}
+
+ipcMain.handle('games:get-xbox-games', async () => {
+    const games = [];
+    const knownPaths = ['C:\\XboxGames', 'D:\\XboxGames', 'E:\\XboxGames', 'F:\\XboxGames'];
+
+    try {
+        for (const xboxGamesPath of knownPaths) {
+            if (fsSync.existsSync(xboxGamesPath)) {
+                const gameFolders = await fs.readdir(xboxGamesPath, { withFileTypes: true });
+
+                for (const gameFolder of gameFolders) {
+                    if (gameFolder.isDirectory()) {
+                        const gameRootPath = path.join(xboxGamesPath, gameFolder.name);
+                        const configPath = await findConfigFile(gameRootPath);
+
+                        if (configPath) {
+                            try {
+                                const xmlContent = await fs.readFile(configPath, 'utf-8');
+                                const config = await parseStringPromise(xmlContent);
+                                
+                                const shellVisuals = config.Game?.ShellVisuals?.[0]?.$;
+                                const executableNode = config.Game?.ExecutableList?.[0]?.Executable?.[0]?.$;
+                                
+                                if (shellVisuals && executableNode) {
+                                    const displayName = shellVisuals.DefaultDisplayName;
+                                    const executable = executableNode.Name;
+
+                                    const exePath = path.join(path.dirname(configPath), executable);
+                                    const details = await getGameDetailsFromRAWG(displayName);
+
+                                    games.push({ 
+                                        launcher: 'xbox', 
+                                        appid: exePath,
+                                        workingDir: gameRootPath,
+                                        name: displayName, 
+                                        path: gameRootPath, 
+                                        is_installed: true,
+                                        banner_url: details.banner_url,
+                                        rawg_id: details.rawg_id
+                                    });
+                                }
+                            } catch (e) {}
+                        }
+                    }
+                }
+            }
+        }
+    } catch (error) {}
+    
+    return { success: true, games };
+});
+
+async function getGameDetailsFromRAWG(gameName) {
+    try {
+        const apiKey = '5ab8f9f63941413b9041407956d1620e'; 
+        const searchUrl = `https://api.rawg.io/api/games?key=${apiKey}&search=${encodeURIComponent(gameName)}&page_size=1`;
+        
+        const response = await axios.get(searchUrl);
+        const results = response.data.results;
+
+        if (results && results.length > 0) {
+            const gameData = results[0];
+            return {
+                banner_url: gameData.background_image || '',
+                rawg_id: gameData.id || null,
+            };
+        }
+        return { banner_url: '' };
+    } catch (error) {
+        console.error(`Erreur RAWG pour "${gameName}":`, error.message);
+        return { banner_url: '' };
+    }
+}
+
+ipcMain.handle('games:get-rawg-achievements', async (event, rawgId) => {
+    try {
+        if (!rawgId) return { success: false, error: 'ID de jeu manquant' };
+        const apiKey = '5ab8f9f63941413b9041407956d1620e';
+        const url = `https://api.rawg.io/api/games/${rawgId}/achievements?key=${apiKey}`;
+        const response = await axios.get(url);
+
+        const achievements = response.data.results.map(ach => ({
+            name: ach.name,
+            description: ach.description,
+            icon: ach.image,
+            unlocked: false,
+        }));
+
+        return { success: true, achievements: achievements };
+    } catch (error) {
+        console.error(`Erreur de récupération des succès RAWG pour ${rawgId}:`, error.message);
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('games:get-rawg-details', async (event, rawgId) => {
+    try {
+        if (!rawgId) return { success: false, error: 'ID de jeu RAWG manquant' };
+        const apiKey = '5ab8f9f63941413b9041407956d1620e';
+        const url = `https://api.rawg.io/api/games/${rawgId}?key=${apiKey}`;
+        const response = await axios.get(url);
+        const details = response.data;
+
+        return { 
+            success: true, 
+            details: {
+                name: details.name,
+                description: details.description_raw,
+                released: details.released,
+                background_image: details.background_image,
+                publishers: details.publishers,
+                developers: details.developers,
+                genres: details.genres,
+                tags: details.tags
+            } 
+        };
+    } catch (error) {
+        console.error(`Erreur de récupération des détails RAWG pour ${rawgId}:`, error.message);
+        return { success: false, error: error.message, status: error.response?.status };
+    }
+});
+
 ipcMain.handle('get-launch-on-startup', () => {
     return app.getLoginItemSettings().openAtLogin;
 });
@@ -505,24 +741,99 @@ ipcMain.on('set-launch-on-startup', (event, shouldLaunch) => {
     }
 });
 
+ipcMain.on('steam:launch-game', (event, appId) => {
+    if (appId) shell.openExternal(`steam://run/${appId}`);
+});
+
+ipcMain.on('epic:launch-game', (_, appName) => {
+    if (appName) shell.openExternal(`com.epicgames.launcher://apps/${appName}?action=launch&silent=true`);
+});
+
+ipcMain.on('ubisoft:launch-game', (_, gameId) => {
+    if (gameId) shell.openExternal(`uplay://launch/${gameId}`);
+});
+ipcMain.on('xbox:launch-game', (_, { exePath, cwd }) => {
+    if (exePath && cwd) {
+        const options = {
+            cwd: cwd
+        };
+        exec(`start "" "${exePath}"`, options, (err) => {
+            if (err) {
+                console.error(`Erreur de lancement pour ${exePath}:`, err);
+                dialog.showErrorBox('Erreur de Lancement', `Impossible de lancer le jeu.\nChemin : ${exePath}\n\nEssayez de lancer le panel en tant qu'administrateur.`);
+            }
+        });
+    }
+});
+
+async function loadCache() {
+  try {
+    const data = await fs.readFile(CACHE_FILE_PATH, 'utf-8');
+    return JSON.parse(data);
+  } catch (error) {
+    return {};
+  }
+}
+
+async function saveCache(data) {
+  try {
+    await fs.writeFile(CACHE_FILE_PATH, JSON.stringify(data, null, 2));
+  } catch (error) {
+    console.error('Erreur de sauvegarde du cache:', error);
+  }
+}
+
+async function getRecentlyPlayedList() {
+  try {
+    const data = await fs.readFile(RECENTLY_PLAYED_PATH, 'utf-8');
+    return JSON.parse(data);
+  } catch (error) {
+    return [];
+  }
+}
+
+ipcMain.handle('games:get-recently-played', getRecentlyPlayedList);
+
+ipcMain.handle('games:record-launch', async (event, gameToRecord) => {
+    try {
+        const uniqueId = `${gameToRecord.launcher}_${gameToRecord.appid}`;
+        let recentlyPlayed = await getRecentlyPlayedList();
+
+        recentlyPlayed = recentlyPlayed.filter(game => game.id !== uniqueId);
+
+        recentlyPlayed.unshift({
+            id: uniqueId,
+            lastLaunched: Date.now()
+        });
+
+        const limitedList = recentlyPlayed.slice(0, 50);
+
+        await fs.writeFile(RECENTLY_PLAYED_PATH, JSON.stringify(limitedList, null, 2));
+        return { success: true };
+    } catch (error) {
+        console.error('Erreur lors de l\'enregistrement du jeu lancé:', error);
+        return { success: false };
+    }
+});
+
 autoUpdater.on('checking-for-update', () => {
-    log.info('Vérification des mises à jour...');
+    console.log('Vérification des mises à jour...');
     const mainWindow = BrowserWindow.getAllWindows()[0];
     mainWindow.webContents.send('update-checking');
 });
 
 autoUpdater.on('update-available', (info) => {
-    log.info('Mise à jour disponible.', info);
+    console.log('Mise à jour disponible.', info);
     const mainWindow = BrowserWindow.getAllWindows()[0];
     mainWindow.webContents.send('update-info', info);
 });
 
 autoUpdater.on('update-not-available', () => {
-    log.info('Aucune mise à jour disponible.');
+    console.log('Aucune mise à jour disponible.');
 });
 
 autoUpdater.on('error', (err) => {
-    log.error('Erreur de mise à jour :', err);
+    console.log('Erreur de mise à jour :', err);
     const mainWindow = BrowserWindow.getAllWindows()[0];
     mainWindow.webContents.send('update-error', err.message);
 });
@@ -530,12 +841,12 @@ autoUpdater.on('error', (err) => {
 autoUpdater.on('download-progress', (progressObj) => {
     const mainWindow = BrowserWindow.getAllWindows()[0];
     const log_message = `Vitesse de téléchargement : ${progressObj.bytesPerSecond} - Téléchargé ${progressObj.percent.toFixed(1)}% (${progressObj.transferred}/${progressObj.total})`;
-    log.info(log_message);
+    console.log(log_message);
     mainWindow.webContents.send('update-download-progress', progressObj.percent);
 });
 
 autoUpdater.on('update-downloaded', () => {
-    log.info('Mise à jour téléchargée.');
+    console.log('Mise à jour téléchargée.');
     const mainWindow = BrowserWindow.getAllWindows()[0];
     mainWindow.webContents.send('update-downloaded');
 });

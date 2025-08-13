@@ -2050,6 +2050,23 @@ async function loadAndRenderAchievements(game) {
         const updateProgressText = document.getElementById('update-progress-text');
         const updateLaterBtn = document.getElementById('update-later-btn');
         const updateNowBtn = document.getElementById('update-now-btn');
+        const checkUpdateBtn = document.getElementById('check-update-btn');
+        const updateStatusText = document.getElementById('update-status-text');
+
+        checkUpdateBtn.addEventListener('click', () => {
+            updateStatusText.textContent = '';
+            window.electronAPI.checkForUpdate();
+        });
+        window.electronAPI.onUpdateCheckStatus((message) => {
+            if (updateStatusText) {
+                updateStatusText.textContent = message;
+                setTimeout(() => {
+                    if (updateStatusText.textContent === message) {
+                        updateStatusText.textContent = '';
+                    }
+                }, 5000);
+            }
+        });
 
         window.electronAPI.onUpdateInfo((info) => {
             updateVersionEl.textContent = `v${info.version}`;

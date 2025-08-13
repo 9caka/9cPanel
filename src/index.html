@@ -47,101 +47,96 @@
         </div>
     </div>
 
-<div id="dashboard-view" class="view-container">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 pt-16">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-main">Tableau de Bord</h1>
-            <button id="dashboard-settings-btn" class="text-secondary hover:text-accent transition-colors text-xl p-2 rounded-md">
-                <i class="fas fa-cog"></i>
-            </button>
-        </div>
-
-        <!-- NOUVELLE STRUCTURE : Grille à deux colonnes principales -->
-        <div class="flex flex-col lg:flex-row gap-6">
-            
-            <!-- Colonne de Gauche (2/3 de la largeur) -->
-            <div class="lg:w-2/3 flex flex-col gap-6">
-                <!-- Widget des Jeux Récents -->
-                <div class="dashboard-widget flex flex-col">
-                    <h3 class="widget-header">
-                        <i class="fas fa-history mr-2"></i> Accès Rapide
-                    </h3>
-                    <div id="recent-games-container" class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- Les jeux récents seront insérés ici -->
-                    </div>
-                </div>
-
-                <!-- Widget Projets Épinglés -->
-                <div class="dashboard-widget flex flex-col">
-                    <h3 class="widget-header">
-                        <i class="fas fa-thumbtack mr-2"></i> Projets Épinglés
-                    </h3>
-                    <div id="pinned-projects-container" class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow">
-                        <!-- Les projets épinglés seront insérés ici -->
-                    </div>
-                </div>
-
-                <!-- Widget To-Do List -->
-                <div class="dashboard-widget flex flex-col">
-                    <h3 class="widget-header"><i class="fas fa-check-square mr-2"></i>To-Do List</h3>
-                    <div class="widget-content flex-grow flex flex-col">
-                        <div class="flex-grow overflow-y-auto pr-2" style="max-height: 220px;">
-                            <ul id="dashboard-todo-list" class="space-y-2"></ul>
-                        </div>
-                        <div class="p-4 border-t border-primary">
-                            <div class="flex gap-2">
-                                <input type="text" id="dashboard-new-todo-input" class="modal-input flex-grow" placeholder="Nouvelle tâche...">
-                                <button id="dashboard-add-todo-btn" class="btn-primary !p-3"><i class="fas fa-plus"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <div id="dashboard-view" class="view-container">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 pt-16">
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-3xl font-bold text-main">Tableau de Bord</h1>
+                <button id="dashboard-settings-btn"
+                    class="text-secondary hover:text-accent transition-colors text-xl p-2 rounded-md">
+                    <i class="fas fa-cog"></i>
+                </button>
             </div>
-
-            <!-- Colonne de Droite (1/3 de la largeur) -->
-            <div class="lg:w-1/3 flex flex-col gap-6">
-                <!-- Widget de Navigation -->
-                <div class="dashboard-widget flex flex-col">
-                    <h3 class="widget-header">
-                        <i class="fas fa-compass mr-2"></i> Navigation
-                    </h3>
-                    <div class="p-4 flex flex-col gap-3 flex-grow justify-center">
-                        <button id="goto-library-btn" class="dashboard-nav-btn">
-                            <i class="fas fa-gamepad fa-fw mr-3"></i> Toute la Bibliothèque
-                        </button>
-                        <button id="goto-dev-btn" class="dashboard-nav-btn">
-                            <i class="fas fa-code fa-fw mr-3"></i> Projets de Développement
-                        </button>
-                        <button id="goto-tools-btn" class="dashboard-nav-btn">
-                            <i class="fas fa-tools fa-fw mr-3"></i> Boîte à Outils
-                        </button>
+            <div class="flex flex-col lg:flex-row gap-6">
+                <div class="lg:w-2/3 flex flex-col gap-6">
+                    <div class="dashboard-widget flex flex-col">
+                        <h3 class="widget-header">
+                            <i class="fas fa-history mr-2"></i> Accès Rapide
+                        </h3>
+                        <div id="recent-games-container" class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        </div>
+                    </div>
+                    <div class="dashboard-widget flex flex-col">
+                        <h3 class="widget-header">
+                            <i class="fas fa-thumbtack mr-2"></i> Projets Épinglés
+                        </h3>
+                        <div id="pinned-projects-container" class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow">
+                        </div>
+                    </div>
+                    <div class="dashboard-widget flex flex-col">
+                        <h3 class="widget-header"><i class="fas fa-check-square mr-2"></i>To-Do List</h3>
+                        <div class="widget-content flex-grow flex flex-col">
+                            <div class="flex-grow overflow-y-auto pr-2" style="max-height: 220px;">
+                                <ul id="dashboard-todo-list" class="space-y-2"></ul>
+                            </div>
+                            <div class="p-4 border-t border-primary">
+                                <div class="flex gap-2">
+                                    <input type="text" id="dashboard-new-todo-input" class="modal-input flex-grow"
+                                        placeholder="Nouvelle tâche...">
+                                    <button id="dashboard-add-todo-btn" class="btn-primary !p-3"><i
+                                            class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                <div class="lg:w-1/3 flex flex-col gap-6">
+                    <div class="dashboard-widget flex flex-col">
+                        <h3 class="widget-header">
+                            <i class="fas fa-compass mr-2"></i> Navigation
+                        </h3>
+                        <div class="p-4 flex flex-col gap-3 flex-grow justify-center">
+                            <button id="goto-library-btn" class="dashboard-nav-btn">
+                                <i class="fas fa-gamepad fa-fw mr-3"></i> Toute la Bibliothèque
+                            </button>
+                            <button id="goto-dev-btn" class="dashboard-nav-btn">
+                                <i class="fas fa-code fa-fw mr-3"></i> Projets de Développement
+                            </button>
+                            <button id="goto-tools-btn" class="dashboard-nav-btn">
+                                <i class="fas fa-tools fa-fw mr-3"></i> Boîte à Outils
+                            </button>
+                        </div>
+                    </div>
 
-                <!-- Widget Moniteur Système -->
-                <div class="dashboard-widget flex flex-col">
-                    <h3 class="widget-header"><i class="fas fa-tachometer-alt mr-2"></i>Moniteur Système</h3>
-                    <div class="widget-content space-y-3 flex-grow flex flex-col justify-center">
-                        <div class="stat-item"><span>CPU</span>
-                            <div class="progress-bar-bg"><div id="dashboard-cpu-bar" class="progress-bar"></div></div>
-                            <span id="dashboard-cpu-percent" class="stat-percent">0%</span>
-                        </div>
-                        <div class="stat-item"><span>RAM</span>
-                            <div class="progress-bar-bg"><div id="dashboard-mem-bar" class="progress-bar"></div></div>
-                            <span id="dashboard-mem-percent" class="stat-percent">0%</span>
-                        </div>
-                        <div class="stat-item"><span>Disque</span>
-                            <div class="progress-bar-bg"><div id="dashboard-disk-bar" class="progress-bar"></div></div>
-                            <span id="dashboard-disk-percent" class="stat-percent">0%</span>
-                        </div>
-                        <div class="pt-2 border-t border-primary text-xs space-y-1">
-                            <div class="flex justify-between">
-                                <span class="text-tertiary"><i class="fas fa-arrow-down mr-1"></i> DL</span>
-                                <span id="dashboard-net-download" class="font-mono">0 B/s</span>
+                    <div class="dashboard-widget flex flex-col">
+                        <h3 class="widget-header"><i class="fas fa-tachometer-alt mr-2"></i>Moniteur Système</h3>
+                        <div class="widget-content space-y-3 flex-grow flex flex-col justify-center">
+                            <div class="stat-item"><span>CPU</span>
+                                <div class="progress-bar-bg">
+                                    <div id="dashboard-cpu-bar" class="progress-bar"></div>
+                                </div>
+                                <span id="dashboard-cpu-percent" class="stat-percent">0%</span>
                             </div>
-                            <div class="flex justify-between">
-                                <span class="text-tertiary"><i class="fas fa-arrow-up mr-1"></i> UL</span>
-                                <span id="dashboard-net-upload" class="font-mono">0 B/s</span>
+                            <div class="stat-item"><span>RAM</span>
+                                <div class="progress-bar-bg">
+                                    <div id="dashboard-mem-bar" class="progress-bar"></div>
+                                </div>
+                                <span id="dashboard-mem-percent" class="stat-percent">0%</span>
+                            </div>
+                            <div class="stat-item"><span>Disque</span>
+                                <div class="progress-bar-bg">
+                                    <div id="dashboard-disk-bar" class="progress-bar"></div>
+                                </div>
+                                <span id="dashboard-disk-percent" class="stat-percent">0%</span>
+                            </div>
+                            <div class="pt-2 border-t border-primary text-xs space-y-1">
+                                <div class="flex justify-between">
+                                    <span class="text-tertiary"><i class="fas fa-arrow-down mr-1"></i> DL</span>
+                                    <span id="dashboard-net-download" class="font-mono">0 B/s</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-tertiary"><i class="fas fa-arrow-up mr-1"></i> UL</span>
+                                    <span id="dashboard-net-upload" class="font-mono">0 B/s</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -149,7 +144,6 @@
             </div>
         </div>
     </div>
-</div>
 
     <div id="main-content" class="view-container is-inactive">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 pt-16">
@@ -157,8 +151,12 @@
                         class="fas fa-arrow-left mr-2"></i> Retour</button>
                 <h1 id="main-title" class="text-3xl font-bold text-main"></h1>
                 <div id="main-header-buttons" class="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                    <button id="refresh-steam-btn" class="text-secondary hover:text-accent transition-colors p-2 rounded-md hidden"><i class="fas fa-sync-alt"></i></button>
-                    <button id="edit-mode-btn" class="text-secondary hover:text-accent transition-colors p-2 rounded-md"><i class="fas fa-pencil-alt"></i></button>
+                    <button id="refresh-steam-btn"
+                        class="text-secondary hover:text-accent transition-colors p-2 rounded-md hidden"><i
+                            class="fas fa-sync-alt"></i></button>
+                    <button id="edit-mode-btn"
+                        class="text-secondary hover:text-accent transition-colors p-2 rounded-md"><i
+                            class="fas fa-pencil-alt"></i></button>
                 </div>
             </div>
             <div class="space-y-4 mb-6">
@@ -166,36 +164,38 @@
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                         <i class="fas fa-search text-tertiary"></i>
                     </span>
-                    <input type="text" id="project-search-input" class="modal-input w-full !pl-10" placeholder="Rechercher...">
+                    <input type="text" id="project-search-input" class="modal-input w-full !pl-10"
+                        placeholder="Rechercher...">
                 </div>
-                <div id="game-library-controls" class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div id="launcher-filters" class="flex items-center gap-2 bg-secondary p-1 rounded-lg">
-                    <button class="filter-btn active" data-filter="all" title="Tous les jeux">
-                        <i class="fas fa-grip-horizontal"></i>
-                    </button>
-                    <button class="filter-btn" data-filter="steam" title="Steam">
-                        <i class="fab fa-steam"></i>
-                    </button>
-                    <button class="filter-btn" data-filter="xbox" title="Xbox">
-                        <i class="fab fa-xbox"></i>
-                    </button>
-                    <button class="filter-btn" data-filter="epic" title="Epic Games">
-                        <i class="fa-solid fa-e"></i>
-                    </button>
-                    <button class="filter-btn" data-filter="ubisoft" title="Ubisoft Connect">
-                        <i class="fa-brands fa-u"></i>
-                    </button>
+                <div id="game-library-controls"
+                    class="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div id="launcher-filters" class="flex items-center gap-2 bg-secondary p-1 rounded-lg">
+                        <button class="filter-btn active" data-filter="all" title="Tous les jeux">
+                            <i class="fas fa-grip-horizontal"></i>
+                        </button>
+                        <button class="filter-btn" data-filter="steam" title="Steam">
+                            <i class="fab fa-steam"></i>
+                        </button>
+                        <button class="filter-btn" data-filter="xbox" title="Xbox">
+                            <i class="fab fa-xbox"></i>
+                        </button>
+                        <button class="filter-btn" data-filter="epic" title="Epic Games">
+                            <i class="fa-solid fa-e"></i>
+                        </button>
+                        <button class="filter-btn" data-filter="ubisoft" title="Ubisoft Connect">
+                            <i class="fa-brands fa-u"></i>
+                        </button>
+                    </div>
+                    <div>
+                        <select id="sort-options" class="modal-input !w-auto">
+                            <option value="default">Trier par défaut</option>
+                            <option value="last_launched">Derniers jeux lancés</option>
+                            <option value="name_asc">Nom (A-Z)</option>
+                            <option value="name_desc">Nom (Z-A)</option>
+                            <option value="launcher">Par Lanceur</option>
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <select id="sort-options" class="modal-input !w-auto">
-                        <option value="default">Trier par défaut</option>
-                        <option value="last_launched">Derniers jeux lancés</option>
-                        <option value="name_asc">Nom (A-Z)</option>
-                        <option value="name_desc">Nom (Z-A)</option>
-                        <option value="launcher">Par Lanceur</option>
-                    </select>
-                </div>
-            </div>
             </div>
             <div id="items-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
         </div>
@@ -256,15 +256,15 @@
                     <div class="widget">
                         <h3 class="widget-header"><i class="fas fa-wrench mr-2"></i>Utilitaires</h3>
                         <div class="p-1">
-                            <div id="tools-tabs" class="flex border-b border-primary overflow-x-auto"><button class="tool-tab active"
-                                    data-tab="color-converter">Couleurs</button><button class="tool-tab"
-                                    data-tab="unit-converter">Unités</button><button class="tool-tab"
+                            <div id="tools-tabs" class="flex border-b border-primary overflow-x-auto"><button
+                                    class="tool-tab active" data-tab="color-converter">Couleurs</button><button
+                                    class="tool-tab" data-tab="unit-converter">Unités</button><button class="tool-tab"
                                     data-tab="lorem-ipsum">Lorem</button><button class="tool-tab"
                                     data-tab="json-formatter">JSON</button><button class="tool-tab"
-                                    data-tab="snippets">Snippets</button><button class="tool-tab" 
-                                    data-tab="docker-manager">Docker</button><button class="tool-tab" 
-                                    data-tab="db-viewer">BDD</button><button class="tool-tab" 
-                                    data-tab="rss-reader">RSS</button><button class="tool-tab" 
+                                    data-tab="snippets">Snippets</button><button class="tool-tab"
+                                    data-tab="docker-manager">Docker</button><button class="tool-tab"
+                                    data-tab="db-viewer">BDD</button><button class="tool-tab"
+                                    data-tab="rss-reader">RSS</button><button class="tool-tab"
                                     data-tab="env-editor">.env</button></div>
                             <div class="relative min-h-[420px]">
                                 <div id="color-converter" class="tool-content pt-6 px-3 space-y-3"><input type="color"
@@ -291,19 +291,20 @@
                                             id="rem-input" class="modal-input text-center" placeholder="1"><span
                                             class="font-mono text-sm">REM</span></div>
                                     <div class="text-xs text-center text-tertiary">Base: <input type="number"
-                                            id="base-font-size" value="16" class="bg-tertiary rounded w-12 text-center"> px
+                                            id="base-font-size" value="16" class="bg-tertiary rounded w-12 text-center">
+                                        px
                                     </div>
                                 </div>
                                 <div id="lorem-ipsum" class="tool-content is-inactive pt-6 px-3 space-y-3">
                                     <div class="flex items-center gap-2"><label for="lorem-paragraphs"
-                                            class="text-sm">Paragraphes:</label><input type="number" id="lorem-paragraphs"
-                                            value="3" class="modal-input w-20 text-center"></div><button
-                                        id="generate-lorem-btn" class="btn-primary w-full">Générer</button><textarea
+                                            class="text-sm">Paragraphes:</label><input type="number"
+                                            id="lorem-paragraphs" value="3" class="modal-input w-20 text-center"></div>
+                                    <button id="generate-lorem-btn" class="btn-primary w-full">Générer</button><textarea
                                         id="lorem-output" class="modal-input w-full text-sm" rows="8" readonly
                                         placeholder="Le texte généré apparaîtra ici..."></textarea>
                                 </div>
-                                <div id="json-formatter" class="tool-content is-inactive pt-6 px-3 space-y-3"><textarea id="json-input"
-                                        class="modal-input w-full font-mono text-xs" rows="8"
+                                <div id="json-formatter" class="tool-content is-inactive pt-6 px-3 space-y-3"><textarea
+                                        id="json-input" class="modal-input w-full font-mono text-xs" rows="8"
                                         placeholder="Collez votre JSON ici..."></textarea><button id="format-json-btn"
                                         class="btn-primary w-full">Formater / Valider</button>
                                     <div id="json-status" class="text-xs text-center h-4"></div>
@@ -311,11 +312,15 @@
                                 <div id="snippets" class="tool-content is-inactive pt-6 px-3">
                                     <div class="flex gap-4" style="height: 380px;">
                                         <div class="w-1/3 flex flex-col gap-2">
-                                            <div id="snippet-list" class="snippet-list flex-grow overflow-y-auto border border-primary rounded-md p-1"></div>
-                                            <button id="add-snippet-btn" class="btn-secondary text-sm w-full">Nouveau Snippet</button>
+                                            <div id="snippet-list"
+                                                class="snippet-list flex-grow overflow-y-auto border border-primary rounded-md p-1">
+                                            </div>
+                                            <button id="add-snippet-btn" class="btn-secondary text-sm w-full">Nouveau
+                                                Snippet</button>
                                         </div>
                                         <div class="w-2/3 flex flex-col gap-2">
-                                            <input type="text" id="snippet-title" class="modal-input" placeholder="Titre du snippet...">
+                                            <input type="text" id="snippet-title" class="modal-input"
+                                                placeholder="Titre du snippet...">
                                             <select id="snippet-lang" class="modal-input">
                                                 <option value="plaintext">Plain Text</option>
                                                 <option value="javascript">JavaScript</option>
@@ -328,18 +333,22 @@
                                             </select>
                                             <div class="snippet-editor-wrapper flex-grow relative">
                                                 <pre><code id="snippet-highlight" class="language-plaintext w-full h-full"></code></pre>
-                                                <textarea id="snippet-code" class="w-full h-full" placeholder="Votre code ici..."></textarea>
+                                                <textarea id="snippet-code" class="w-full h-full"
+                                                    placeholder="Votre code ici..."></textarea>
                                             </div>
                                             <div class="flex gap-2">
-                                                <button id="delete-snippet-btn" class="btn-secondary !bg-red-800/50 !border-red-700/50 hover:!bg-red-700 w-1/3">Supprimer</button>
-                                                <button id="save-snippet-btn" class="btn-primary w-2/3">Sauvegarder</button>
+                                                <button id="delete-snippet-btn"
+                                                    class="btn-secondary !bg-red-800/50 !border-red-700/50 hover:!bg-red-700 w-1/3">Supprimer</button>
+                                                <button id="save-snippet-btn"
+                                                    class="btn-primary w-2/3">Sauvegarder</button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div id="docker-manager" class="tool-content is-inactive pt-6 px-3">
                                     <div class="flex justify-end mb-4">
-                                        <button id="refresh-docker-btn" class="btn-helper !p-2"><i class="fas fa-sync-alt"></i></button>
+                                        <button id="refresh-docker-btn" class="btn-helper !p-2"><i
+                                                class="fas fa-sync-alt"></i></button>
                                     </div>
                                     <div id="docker-container-list" class="space-y-2">
                                     </div>
@@ -349,19 +358,24 @@
                                         <button id="db-select-file-btn" class="btn-primary w-full mb-2">
                                             <i class="fas fa-database mr-2"></i> Sélectionner un fichier SQLite
                                         </button>
-                                        <div id="db-info" class="text-xs text-tertiary text-center h-4">Aucune base de données connectée</div>
+                                        <div id="db-info" class="text-xs text-tertiary text-center h-4">Aucune base de
+                                            données connectée</div>
                                     </div>
-                                    <div id="db-main-area" class="flex-grow flex gap-4 mt-4 overflow-hidden is-inactive">
+                                    <div id="db-main-area"
+                                        class="flex-grow flex gap-4 mt-4 overflow-hidden is-inactive">
                                         <div id="db-sidebar" class="w-1/4 flex flex-col gap-2">
                                             <h4 class="text-sm font-bold text-main">Tables</h4>
                                             <div id="db-tables-list" class="db-sidebar-list flex-grow"></div>
                                         </div>
                                         <div class="w-3/4 flex flex-col gap-2">
                                             <div class="flex-shrink-0">
-                                                <textarea id="db-query-input" class="modal-input font-mono text-sm" rows="4" placeholder="SELECT * FROM nom_de_la_table;"></textarea>
-                                                <button id="db-run-query-btn" class="btn-primary w-full mt-2">Exécuter la requête</button>
+                                                <textarea id="db-query-input" class="modal-input font-mono text-sm"
+                                                    rows="4" placeholder="SELECT * FROM nom_de_la_table;"></textarea>
+                                                <button id="db-run-query-btn" class="btn-primary w-full mt-2">Exécuter
+                                                    la requête</button>
                                             </div>
-                                            <div id="db-results-area" class="flex-grow overflow-auto border border-primary rounded-md">
+                                            <div id="db-results-area"
+                                                class="flex-grow overflow-auto border border-primary rounded-md">
                                             </div>
                                         </div>
                                     </div>
@@ -369,16 +383,22 @@
                                 <div id="rss-reader" class="tool-content is-inactive pt-6 px-3 flex gap-4 h-[420px]">
                                     <div class="w-1/3 flex flex-col gap-2">
                                         <h4 class="text-sm font-bold text-main">Mes Flux RSS</h4>
-                                        <div id="rss-feeds-list" class="flex-grow overflow-y-auto border border-primary rounded-md p-1 space-y-1"></div>
+                                        <div id="rss-feeds-list"
+                                            class="flex-grow overflow-y-auto border border-primary rounded-md p-1 space-y-1">
+                                        </div>
                                         <div class="flex gap-2">
-                                            <input type="url" id="rss-new-feed-url" class="modal-input flex-grow" placeholder="URL du flux RSS...">
-                                            <button id="rss-add-feed-btn" class="btn-primary !p-3"><i class="fas fa-plus"></i></button>
+                                            <input type="url" id="rss-new-feed-url" class="modal-input flex-grow"
+                                                placeholder="URL du flux RSS...">
+                                            <button id="rss-add-feed-btn" class="btn-primary !p-3"><i
+                                                    class="fas fa-plus"></i></button>
                                         </div>
                                     </div>
                                     <div class="w-2/3 flex flex-col">
-                                        <h4 id="rss-current-feed-title" class="text-sm font-bold text-main mb-2 truncate">Sélectionnez un flux</h4>
+                                        <h4 id="rss-current-feed-title"
+                                            class="text-sm font-bold text-main mb-2 truncate">Sélectionnez un flux</h4>
                                         <div id="rss-articles-list" class="flex-grow overflow-y-auto space-y-3 pr-2">
-                                            <p class="text-tertiary text-center pt-10">Les articles apparaîtront ici.</p>
+                                            <p class="text-tertiary text-center pt-10">Les articles apparaîtront ici.
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -387,16 +407,20 @@
                                         <select id="env-project-selector" class="modal-input flex-grow">
                                             <option value="">Sélectionnez un projet avec un fichier .env</option>
                                         </select>
-                                        <button id="env-refresh-projects-btn" class="btn-helper !p-2.5" title="Rafraîchir la liste des projets">
+                                        <button id="env-refresh-projects-btn" class="btn-helper !p-2.5"
+                                            title="Rafraîchir la liste des projets">
                                             <i class="fas fa-sync-alt"></i>
                                         </button>
                                     </div>
-                                    <div id="env-editor-main" class="is-inactive flex-grow flex flex-col gap-4 overflow-hidden">
+                                    <div id="env-editor-main"
+                                        class="is-inactive flex-grow flex flex-col gap-4 overflow-hidden">
                                         <div id="env-variables-list" class="flex-grow overflow-y-auto space-y-2 pr-2">
                                         </div>
                                         <div class="flex-shrink-0 flex gap-2">
-                                            <button id="env-add-var-btn" class="btn-secondary w-1/2">Ajouter une variable</button>
-                                            <button id="env-save-btn" class="btn-primary w-1/2">Sauvegarder les changements</button>
+                                            <button id="env-add-var-btn" class="btn-secondary w-1/2">Ajouter une
+                                                variable</button>
+                                            <button id="env-save-btn" class="btn-primary w-1/2">Sauvegarder les
+                                                changements</button>
                                         </div>
                                     </div>
                                 </div>
@@ -406,7 +430,7 @@
                 </div>
 
                 <div class="lg:col-span-3 space-y-6">
-                     <div class="widget">
+                    <div class="widget">
                         <h3 class="widget-header"><i class="fas fa-book mr-2"></i>Recherche Documentation</h3>
                         <div class="widget-content">
                             <form id="doc-search-form" class="space-y-4"><input type="text" id="doc-search-input"
@@ -422,7 +446,8 @@
                     <div class="widget">
                         <h3 class="widget-header"><i class="fas fa-sticky-note mr-2"></i>Notes Rapides</h3>
                         <div class="widget-content">
-                            <textarea id="scratchpad-input" class="modal-input w-full h-48 text-sm" placeholder="Vos notes ici..."></textarea>
+                            <textarea id="scratchpad-input" class="modal-input w-full h-48 text-sm"
+                                placeholder="Vos notes ici..."></textarea>
                         </div>
                     </div>
                 </div>
@@ -430,7 +455,7 @@
         </div>
     </div>
 
-<div id="settings-view" class="view-container is-inactive">
+    <div id="settings-view" class="view-container is-inactive">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 pt-16">
             <div class="relative mb-8 flex justify-center items-center">
                 <button id="settings-back-btn" class="back-button"><i class="fas fa-arrow-left mr-2"></i>
@@ -452,8 +477,13 @@
                         </div>
                         <div class="flex justify-between items-center pt-4 border-t border-primary">
                             <span class="text-main">Version</span>
-                            <span id="app-version" class="text-tertiary font-mono">...</span>
+                            <div>
+                                <span id="app-version" class="text-tertiary font-mono mr-4">...</span>
+                                <button id="check-update-btn" class="btn-secondary">Vérifier les mises à jour</button>
+                            </div>
                         </div>
+
+                        <div id="update-status-text" class="text-center text-tertiary text-sm h-4"></div>
                     </div>
                 </div>
                 <div class="widget">
@@ -487,16 +517,22 @@
                     <h3 class="widget-header">Intégrations</h3>
                     <div class="widget-content space-y-4">
                         <div>
-                            <label for="github-token-input" class="block text-sm font-medium text-secondary mb-1">Jeton d'accès personnel GitHub</label>
-                            <input type="password" id="github-token-input" class="modal-input" placeholder="Collez votre jeton ici...">
+                            <label for="github-token-input" class="block text-sm font-medium text-secondary mb-1">Jeton
+                                d'accès personnel GitHub</label>
+                            <input type="password" id="github-token-input" class="modal-input"
+                                placeholder="Collez votre jeton ici...">
                         </div>
                         <div>
-                            <label for="steam-api-key-input" class="block text-sm font-medium text-secondary mb-1">Clé d'API Steam</label>
-                            <input type="password" id="steam-api-key-input" class="modal-input" placeholder="Collez votre clé d'API ici...">
+                            <label for="steam-api-key-input" class="block text-sm font-medium text-secondary mb-1">Clé
+                                d'API Steam</label>
+                            <input type="password" id="steam-api-key-input" class="modal-input"
+                                placeholder="Collez votre clé d'API ici...">
                         </div>
                         <div>
-                            <label for="steam-id-input" class="block text-sm font-medium text-secondary mb-1">SteamID64</label>
-                            <input type="text" id="steam-id-input" class="modal-input" placeholder="Collez votre SteamID64 ici...">
+                            <label for="steam-id-input"
+                                class="block text-sm font-medium text-secondary mb-1">SteamID64</label>
+                            <input type="text" id="steam-id-input" class="modal-input"
+                                placeholder="Collez votre SteamID64 ici...">
                         </div>
                     </div>
                 </div>
@@ -504,8 +540,7 @@
         </div>
     </div>
 
-    <div id="edit-modal"
-        class="modal-overlay is-inactive">
+    <div id="edit-modal" class="modal-overlay is-inactive">
         <form id="edit-form"
             class="bg-primary p-8 rounded-xl shadow-2xl w-full max-w-3xl border border-secondary flex flex-col h-[90vh]">
             <h2 id="modal-title" class="text-2xl font-bold text-main mb-6 flex-shrink-0"></h2><input type="hidden"
@@ -517,15 +552,13 @@
                 <div class="mb-4"><label for="item-description"
                         class="block text-sm font-medium text-secondary mb-1">Description</label><input type="text"
                         id="item-description" class="modal-input" required></div>
-                <div class="mb-4"><label for="item-path"
-                        class="block text-sm font-medium text-secondary mb-1">Chemin du Projet
+                <div class="mb-4"><label for="item-path" class="block text-sm font-medium text-secondary mb-1">Chemin du
+                        Projet
                         (Optionnel)</label><input type="text" id="item-path" class="modal-input"
                         placeholder="Ex: C:\\Users\\MonNom\\Documents\\Projets\\MonSite"></div>
                 <div class="mb-4"><label class="block text-sm font-medium text-secondary mb-1">Icône</label>
-                    <div id="icon-picker-trigger"
-                        class="modal-input flex items-center justify-between cursor-pointer">
-                        <div class="flex items-center gap-3"><span id="selected-icon-preview"
-                                class="w-6 text-center"><i
+                    <div id="icon-picker-trigger" class="modal-input flex items-center justify-between cursor-pointer">
+                        <div class="flex items-center gap-3"><span id="selected-icon-preview" class="w-6 text-center"><i
                                     class="fas fa-question-circle text-tertiary"></i></span><span
                                 id="selected-icon-name" class="text-tertiary">Choisir une icône...</span></div><i
                             class="fas fa-chevron-down text-tertiary"></i>
@@ -554,8 +587,7 @@
                     class="btn-primary">Sauvegarder</button></div>
         </form>
     </div>
-    <div id="icon-picker-modal"
-        class="modal-overlay is-inactive">
+    <div id="icon-picker-modal" class="modal-overlay is-inactive">
         <div
             class="bg-primary p-8 rounded-xl shadow-2xl w-full max-w-4xl border border-secondary flex flex-col h-[80vh]">
             <h2 class="text-2xl font-bold text-main mb-6">Choisir une icône</h2>
@@ -579,8 +611,11 @@
     </div>
 
     <div id="game-details-modal" class="modal-overlay is-inactive">
-        <div class="bg-secondary p-1 rounded-xl shadow-2xl w-full max-w-5xl border border-secondary flex flex-col h-[90vh] relative">
-            <button id="close-game-details-btn" class="absolute top-4 right-4 text-white hover:text-main transition-colors z-20 bg-black/50 rounded-full w-8 h-8 flex items-center justify-center"><i class="fas fa-times"></i></button>
+        <div
+            class="bg-secondary p-1 rounded-xl shadow-2xl w-full max-w-5xl border border-secondary flex flex-col h-[90vh] relative">
+            <button id="close-game-details-btn"
+                class="absolute top-4 right-4 text-white hover:text-main transition-colors z-20 bg-black/50 rounded-full w-8 h-8 flex items-center justify-center"><i
+                    class="fas fa-times"></i></button>
             <div id="game-details-content" class="flex-grow overflow-y-auto bg-primary rounded-lg">
             </div>
         </div>
@@ -589,15 +624,18 @@
     <div id="update-modal" class="modal-overlay is-inactive">
         <div class="bg-primary p-8 rounded-xl shadow-2xl w-full max-w-lg border border-secondary flex flex-col">
             <h2 class="text-2xl font-bold text-main mb-2">Mise à jour disponible !</h2>
-            <p class="text-secondary mb-4">Une nouvelle version <span id="update-version" class="font-bold text-accent"></span> est prête.</p>
-            
+            <p class="text-secondary mb-4">Une nouvelle version <span id="update-version"
+                    class="font-bold text-accent"></span> est prête.</p>
+
             <h3 class="font-bold text-main mt-4 mb-2">Nouveautés :</h3>
-            <div id="update-notes" class="bg-secondary p-4 rounded-md h-48 overflow-y-auto text-sm text-secondary border border-primary">
+            <div id="update-notes"
+                class="bg-secondary p-4 rounded-md h-48 overflow-y-auto text-sm text-secondary border border-primary">
             </div>
 
             <div id="update-progress-container" class="w-full my-4 hidden">
                 <div class="w-full bg-secondary rounded-full h-2.5">
-                    <div id="update-progress-bar" class="bg-accent h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    <div id="update-progress-bar" class="bg-accent h-2.5 rounded-full transition-all duration-300"
+                        style="width: 0%"></div>
                 </div>
                 <p id="update-progress-text" class="text-center text-xs text-tertiary mt-1">Téléchargement...</p>
             </div>

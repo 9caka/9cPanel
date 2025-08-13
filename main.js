@@ -909,9 +909,10 @@ log.transports.file.level = 'info';
 autoUpdater.logger = log;
 
 autoUpdater.on('checking-for-update', () => {
-    console.log('Vérification des mises à jour...');
     const mainWindow = BrowserWindow.getAllWindows()[0];
-    mainWindow.webContents.send('update-checking');
+    if (mainWindow) {
+        mainWindow.webContents.send('update-check-status', 'Vérification en cours...');
+    }
 });
 
 autoUpdater.on('update-available', (info) => {
@@ -921,13 +922,17 @@ autoUpdater.on('update-available', (info) => {
 });
 
 autoUpdater.on('update-not-available', () => {
-    console.log('Aucune mise à jour disponible.');
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    if (mainWindow) {
+        mainWindow.webContents.send('update-check-status', 'Vous êtes à jour.');
+    }
 });
 
 autoUpdater.on('error', (err) => {
-    console.log('Erreur de mise à jour :', err);
     const mainWindow = BrowserWindow.getAllWindows()[0];
-    mainWindow.webContents.send('update-error', err.message);
+    if (mainWindow) {
+        mainWindow.webContents.send('update-check-status', `Erreur : ${err.message || 'Impossible de vérifier les mises à jour.'}`);
+    }
 });
 
 autoUpdater.on('download-progress', (progressObj) => {
@@ -953,4 +958,8 @@ ipcMain.on('restart-app', () => {
 
 ipcMain.handle('get-app-version', () => {
     return app.getVersion();
+});
+
+ipcMain.on('check-for-update', () => {
+    autoUpdater.checkForUpdates();
 });

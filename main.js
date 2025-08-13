@@ -14,26 +14,47 @@ const { autoUpdater } = require('electron-updater');
 const log = require('electron-log');
 const yaml = require('js-yaml');
 const { parseStringPromise } = require('xml2js');
-const CACHE_FILE_PATH = path.join(__dirname, 'src/data/rawg_cache.json');
-const RECENTLY_PLAYED_PATH = path.join(__dirname, 'src/data/recently_played.json');
-const PINNED_PROJECTS_PATH = path.join(__dirname, 'src/data/pinned_projects.json');
-
 const openDatabases = new Map();
 
-const userDataPath = app.isPackaged 
-  ? app.getPath('userData')
-  : path.join(__dirname, 'src');
+const userDataRootPath = app.getPath('userData');
+const dataFolderPath = path.join(userDataRootPath, 'data');
 
-if (app.isPackaged && !fsSync.existsSync(userDataPath)) {
-  fsSync.mkdirSync(userDataPath, { recursive: true });
+if (!fsSync.existsSync(dataFolderPath)) {
+    fsSync.mkdirSync(dataFolderPath, { recursive: true });
 }
 
-const getDataPath = (fileName) => {
-    const dataDir = path.join(userDataPath, 'data');
-    if (!fsSync.existsSync(dataDir)) {
-        fsSync.mkdirSync(dataDir, { recursive: true });
+const appSourcePath = app.isPackaged ? path.dirname(app.getPath('exe')) : __dirname;
+
+/**
+ * @param {string} fileName
+ * @returns {string}
+ */
+
+const getUserDataPath = (fileName) => {
+    return path.join(dataFolderPath, fileName);
+};
+
+/**
+ * @param {string} fileName
+ * @param {string} defaultContent
+ * @returns {Promise<string>}
+ */
+const ensureFileExists = async (fileName, defaultContent = '[]') => {
+    const userPath = getUserDataPath(fileName);
+    try {
+        await fs.access(userPath);
+    } catch (error) {
+        try {
+            const templatePath = path.join(__dirname, 'src', 'data', fileName);
+            await fs.access(templatePath);
+            await fs.copyFile(templatePath, userPath);
+            console.log(`Fichier par défaut '${fileName}' copié vers ${userPath}`);
+        } catch (templateError) {
+            await fs.writeFile(userPath, defaultContent, 'utf-8');
+            console.log(`Fichier par défaut '${fileName}' créé dans ${userPath}`);
+        }
     }
-    return path.join(dataDir, fileName);
+    return userPath;
 };
 
 const execPromise = (command, options) => new Promise((resolve, reject) => {
@@ -192,8 +213,7 @@ ipcMain.handle('get-project-details', async (event, projectPath) => {
         }
 
         if (details.branch) {
-            const settingsPath = path.join(__dirname, 'src/data/settings.json');
-            const settings = JSON.parse(await fs.readFile(settingsPath, 'utf-8').catch(() => '{}'));
+            const settings = await getSettings();
             
             if (settings.githubToken) {
                 const { Octokit } = await import('@octokit/rest');
@@ -276,38 +296,36 @@ ipcMain.handle('docker:command', async (event, { action, id }) => {
   }
 });
 
-ipcMain.handle('read-file', async (event, filePath) => {
+ipcMain.handle('read-file', async (event, fileName) => {
+  if (fileName === 'icons.json') {
+    const staticPath = path.join(__dirname, 'src', 'data', 'icons.json');
+    const data = await fs.readFile(staticPath, 'utf-8');
+    return JSON.parse(data);
+  }
   try {
-    const isStaticData = ['icons.json', 'projects-dev.json'].includes(filePath);
+    let defaultContent = '[]';
+    if (['settings.json', 'rawg_cache.json'].includes(fileName)) {
+        defaultContent = '{}';
+    } else if (fileName === 'scratchpad.txt') {
+        defaultContent = '';
+    }
 
-    const fullPath = isStaticData
-      ? path.join(__dirname, 'src', 'data', filePath)
-      : getDataPath(filePath);
-      
-    const data = await fs.readFile(fullPath, 'utf-8');
-    if (filePath.endsWith('.json')) {
-        return JSON.parse(data);
-    }
-    return data;
+    const filePath = await ensureFileExists(fileName, defaultContent);
+    const data = await fs.readFile(filePath, 'utf-8');
+    return fileName.endsWith('.json') ? JSON.parse(data) : data;
   } catch (err) {
-    if (err.code === 'ENOENT' && !['icons.json', 'projects-dev.json'].includes(filePath)) {
-      const isJson = filePath.endsWith('.json');
-      const defaultContent = isJson ? (filePath.includes('settings.json') ? '{}' : '[]') : '';
-      await fs.writeFile(getDataPath(filePath), defaultContent, 'utf-8');
-      return isJson ? JSON.parse(defaultContent) : defaultContent;
-    }
-    console.error(`Erreur de lecture pour ${filePath}:`, err);
+    console.error(`[read-file] Erreur de lecture pour ${fileName}:`, err);
     return null;
   }
 });
 
-ipcMain.on('save-items', async (event, { filePath, data }) => {
+ipcMain.on('save-items', async (event, { filePath: fileName, data }) => {
   try {
-    const fullPath = getDataPath(filePath);
-    const content = (typeof data === 'string') ? data : JSON.stringify(data, null, 2);
-    await fs.writeFile(fullPath, content);
+    const fullPath = getUserDataPath(fileName);
+    const content = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    await fs.writeFile(fullPath, content, 'utf-8');
   } catch (err) {
-    console.error(`Erreur de sauvegarde pour ${filePath}:`, err);
+    console.error(`[save-items] Erreur de sauvegarde pour ${fileName}:`, err);
   }
 });
 
@@ -408,8 +426,7 @@ ipcMain.handle('env:save', async (event, { projectPath, data }) => {
 
 ipcMain.handle('steam:get-owned-games', async () => {
     try {
-        const settingsPath = path.join(__dirname, 'src/data/settings.json');
-        const settings = JSON.parse(await fs.readFile(settingsPath, 'utf-8').catch(() => '{}'));
+        const settings = await getSettings();
 
         if (!settings.steamApiKey || !settings.steamId) {
             throw new Error("La clé d'API Steam ou le SteamID ne sont pas configurés.");
@@ -489,8 +506,7 @@ ipcMain.handle('steam:get-game-details', async (event, appid) => {
 
 ipcMain.handle('steam:get-player-achievements', async (event, appid) => {
     try {
-        const settingsPath = path.join(__dirname, 'src/data/settings.json');
-        const settings = JSON.parse(await fs.readFile(settingsPath, 'utf-8').catch(() => '{}'));
+        const settings = await getSettings();
         if (!settings.steamApiKey || !settings.steamId) {
             throw new Error("Clé d'API Steam ou SteamID non configurés.");
         }
@@ -812,7 +828,8 @@ ipcMain.on('xbox:launch-game', (_, { exePath, cwd }) => {
 
 async function loadCache() {
   try {
-    const data = await fs.readFile(CACHE_FILE_PATH, 'utf-8');
+    const cachePath = await ensureFileExists('rawg_cache.json', '{}');
+    const data = await fs.readFile(cachePath, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
     return {};
@@ -821,7 +838,8 @@ async function loadCache() {
 
 async function saveCache(data) {
   try {
-    await fs.writeFile(CACHE_FILE_PATH, JSON.stringify(data, null, 2));
+    const cachePath = getUserDataPath('rawg_cache.json');
+    await fs.writeFile(cachePath, JSON.stringify(data, null, 2));
   } catch (error) {
     console.error('Erreur de sauvegarde du cache:', error);
   }
@@ -829,11 +847,18 @@ async function saveCache(data) {
 
 async function getRecentlyPlayedList() {
   try {
-    const data = await fs.readFile(RECENTLY_PLAYED_PATH, 'utf-8');
+    const filePath = await ensureFileExists('recently_played.json', '[]');
+    const data = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
     return [];
   }
+}
+
+async function getSettings() {
+    const filePath = await ensureFileExists('settings.json', '{}');
+    const data = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(data);
 }
 
 ipcMain.handle('games:get-recently-played', getRecentlyPlayedList);
@@ -842,17 +867,16 @@ ipcMain.handle('games:record-launch', async (event, gameToRecord) => {
     try {
         const uniqueId = `${gameToRecord.launcher}_${gameToRecord.appid}`;
         let recentlyPlayed = await getRecentlyPlayedList();
-
         recentlyPlayed = recentlyPlayed.filter(game => game.id !== uniqueId);
-
         recentlyPlayed.unshift({
             id: uniqueId,
             lastLaunched: Date.now()
         });
-
         const limitedList = recentlyPlayed.slice(0, 50);
 
-        await fs.writeFile(RECENTLY_PLAYED_PATH, JSON.stringify(limitedList, null, 2));
+        const recentlyPlayedPath = getUserDataPath('recently_played.json');
+        await fs.writeFile(recentlyPlayedPath, JSON.stringify(limitedList, null, 2));
+
         return { success: true };
     } catch (error) {
         console.error('Erreur lors de l\'enregistrement du jeu lancé:', error);
@@ -862,7 +886,8 @@ ipcMain.handle('games:record-launch', async (event, gameToRecord) => {
 
 ipcMain.handle('projects:get-pinned', async () => {
   try {
-    const data = await fs.readFile(PINNED_PROJECTS_PATH, 'utf-8');
+    const filePath = await ensureFileExists('pinned_projects.json', '[]');
+    const data = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
     return [];
@@ -871,7 +896,8 @@ ipcMain.handle('projects:get-pinned', async () => {
 
 ipcMain.handle('projects:set-pinned', async (event, pinnedProjects) => {
     try {
-        await fs.writeFile(PINNED_PROJECTS_PATH, JSON.stringify(pinnedProjects, null, 2));
+        const fullPath = getUserDataPath('pinned_projects.json');
+        await fs.writeFile(fullPath, JSON.stringify(pinnedProjects, null, 2));
         return { success: true };
     } catch (error) {
         console.error('Erreur de sauvegarde des projets épinglés:', error);

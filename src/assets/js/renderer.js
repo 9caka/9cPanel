@@ -337,12 +337,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         Promise.all([
             loadGames(),
-            window.electronAPI.readFile('projects-dev.json'),
+            window.electronAPI.readFile('projects-dev.json'), 
             window.electronAPI.projectsGetPinned()
         ]).then(([_, devProjects, pinned]) => {
             state.currentItems = devProjects || [];
             state.pinnedProjects = pinned || [];
-
             populateDashboard();
         });
         initTodoSystem();
@@ -1212,7 +1211,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const articlesListEl = document.getElementById('rss-articles-list');
             const currentFeedTitleEl = document.getElementById('rss-current-feed-title');
 
-            const FEEDS_FILE_PATH = 'src/data/rss-feeds.json';
+            const FEEDS_FILE_PATH = 'rss-feeds.json';
             let feeds = [];
             let activeFeedUrl = null;
 
@@ -1794,7 +1793,7 @@ async function loadAndRenderAchievements(game) {
                 setTimeout(() => {
                     if (button.id === 'dev-btn') {
                         showView(dom.mainContent);
-                        loadItems('src/data/projects-dev.json', 'Mes Projets de Développement');
+                        loadItems('projects-dev.json', 'Mes Projets de Développement');
                         dom.editModeBtn.style.display = 'block';
                         dom.refreshSteamBtn.style.display = 'none';
                         dom.gameLibraryControls.style.display = 'none'; 
@@ -1910,15 +1909,26 @@ async function loadAndRenderAchievements(game) {
             } else {
                 state.currentItems.push(newItem);
             }
+            console.log(`Sauvegarde en cours vers le fichier : ${state.currentFilePath}`);
+            if (!state.currentFilePath || !state.currentFilePath.endsWith('.json')) {
+                showCustomNotification('Erreur : Chemin de sauvegarde invalide.', 'error');
+                console.error('Chemin de sauvegarde invalide :', state.currentFilePath);
+                return;
+            }
+
             window.electronAPI.saveItems({ filePath: state.currentFilePath, data: state.currentItems });
             showCustomNotification('Projet sauvegardé !');
             renderItems();
             closeEditModal();
         });
 
-        function launchGame(game) {
+        async function launchGame(game) {
             if (!game) return;
-            window.electronAPI.gamesRecordLaunch(game);
+
+            await window.electronAPI.gamesRecordLaunch(game);
+
+            populateDashboard();
+
             switch (game.launcher) {
                 case 'steam': window.electronAPI.steamLaunchGame(game.appid); break;
                 case 'epic': window.electronAPI.epicLaunchGame(game.appid); break;
@@ -1960,6 +1970,7 @@ async function loadAndRenderAchievements(game) {
         if (launchButton) {
             e.stopPropagation();
             launchGame(game);
+            showCustomNotification(`Lancement de ${game.name}...`);
         } else if (gameCard) {
             openGameDetailsModal(game);
         }

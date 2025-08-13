@@ -1,6 +1,6 @@
 {
   "name": "9cpanel",
-  "version": "1.11.0",
+  "version": "1.11.1",
   "description": "Panel de développement et Gaming",
   "main": "main.js",
   "scripts": {
@@ -38,7 +38,8 @@
       "src/preload.js",
       "src/index.html",
       "src/assets/**/*",
-      "src/data/icons.json"
+      "src/data/icons.json",
+      "src/data/rss-feeds.json"
     ],
     "win": {
       "target": "nsis",
@@ -49,9 +50,8 @@
       "allowToChangeInstallationDirectory": true
     },
     "publish": {
-      "provider": "github",
-      "owner": "9caka",
-      "repo": "9cPanel"
+      "provider": "generic",
+      "url": "http://127.0.0.1:8080"
     }
   }
 }

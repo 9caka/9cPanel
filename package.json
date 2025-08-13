@@ -1,6 +1,6 @@
 {
   "name": "9cpanel",
-  "version": "1.11.1",
+  "version": "1.11.2",
   "description": "Panel de développement et Gaming",
   "main": "main.js",
   "scripts": {
@@ -46,8 +46,8 @@
       "icon": "src/assets/icon.ico"
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "oneClick": true,
+      "perMachine": false
     },
     "publish": {
       "provider": "generic",

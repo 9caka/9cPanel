@@ -10,6 +10,7 @@ const parser = new Parser();
 const semver = require('semver');
 const dotenv = require('dotenv');
 const axios = require('axios'); 
+const { autoUpdater } = require('electron-updater');
 const log = require('electron-log');
 const yaml = require('js-yaml');
 const { parseStringPromise } = require('xml2js');
@@ -134,49 +135,6 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-    const { autoUpdater } = require('electron-updater');
-
-    log.transports.file.level = 'info';
-    autoUpdater.logger = log;
-
-    autoUpdater.on('checking-for-update', () => {
-        const mainWindow = BrowserWindow.getAllWindows()[0];
-        if (mainWindow) {
-            mainWindow.webContents.send('update-check-status', 'Vérification en cours...');
-        }
-    });
-
-    autoUpdater.on('update-available', (info) => {
-        console.log('Mise à jour disponible !', info);
-        const mainWindow = BrowserWindow.getAllWindows()[0];
-        mainWindow.webContents.send('update-info', info);
-    });
-
-    autoUpdater.on('update-not-available', () => {
-        const mainWindow = BrowserWindow.getAllWindows()[0];
-        if (mainWindow) {
-            mainWindow.webContents.send('update-check-status', 'Vous êtes à jour.');
-        }
-    });
-
-    autoUpdater.on('error', (err) => {
-        console.log('Erreur de mise à jour :', err);
-        const mainWindow = BrowserWindow.getAllWindows()[0];
-        if (mainWindow) {
-            mainWindow.webContents.send('update-check-status', `Erreur : ${err.message || 'Impossible de vérifier les mises à jour.'}`);
-        }
-    });
-
-    autoUpdater.on('download-progress', (progressObj) => {
-        const mainWindow = BrowserWindow.getAllWindows()[0];
-        mainWindow.webContents.send('update-download-progress', progressObj.percent);
-    });
-
-    autoUpdater.on('update-downloaded', () => {
-        const mainWindow = BrowserWindow.getAllWindows()[0];
-        mainWindow.webContents.send('update-downloaded');
-    });
-
     createWindow();
 });
 app.on('window-all-closed', () => {
@@ -948,3 +906,60 @@ ipcMain.handle('projects:set-pinned', async (event, pinnedProjects) => {
 });
 
 log.transports.file.level = 'info';
+autoUpdater.logger = log;
+
+autoUpdater.on('checking-for-update', () => {
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    if (mainWindow) {
+        mainWindow.webContents.send('update-check-status', 'Vérification en cours...');
+    }
+});
+
+autoUpdater.on('update-available', (info) => {
+    console.log('Mise à jour disponible.', info);
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    mainWindow.webContents.send('update-info', info);
+});
+
+autoUpdater.on('update-not-available', () => {
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    if (mainWindow) {
+        mainWindow.webContents.send('update-check-status', 'Vous êtes à jour.');
+    }
+});
+
+autoUpdater.on('error', (err) => {
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    if (mainWindow) {
+        mainWindow.webContents.send('update-check-status', `Erreur : ${err.message || 'Impossible de vérifier les mises à jour.'}`);
+    }
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    const log_message = `Vitesse de téléchargement : ${progressObj.bytesPerSecond} - Téléchargé ${progressObj.percent.toFixed(1)}% (${progressObj.transferred}/${progressObj.total})`;
+    console.log(log_message);
+    mainWindow.webContents.send('update-download-progress', progressObj.percent);
+});
+
+autoUpdater.on('update-downloaded', () => {
+    console.log('Mise à jour téléchargée.');
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    mainWindow.webContents.send('update-downloaded');
+});
+
+ipcMain.on('download-update', () => {
+    autoUpdater.downloadUpdate();
+});
+
+ipcMain.on('restart-app', () => {
+    autoUpdater.quitAndInstall();
+});
+
+ipcMain.handle('get-app-version', () => {
+    return app.getVersion();
+});
+
+ipcMain.on('check-for-update', () => {
+    autoUpdater.checkForUpdates();
+});

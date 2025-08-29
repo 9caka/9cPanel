@@ -6,59 +6,59 @@ const hslToRgb = (h, s, l) => { s /= 100; l /= 100; let c = (1 - Math.abs(2 * l 
 
 document.addEventListener('DOMContentLoaded', () => {
     try {
-       const dom = {
-           allViews: document.querySelectorAll('.view-container'),
-           allModals: document.querySelectorAll('.modal-overlay'),
-           mainContent: document.getElementById('main-content'),
-           devtoolsView: document.getElementById('devtools-view'),
-           settingsView: document.getElementById('settings-view'),
-           welcomeScreen: document.getElementById('welcome-screen'),
-           mainTitle: document.getElementById('main-title'),
-           itemsContainer: document.getElementById('items-container'),
-           editModeBtn: document.getElementById('edit-mode-btn'),
-           refreshSteamBtn: document.getElementById('refresh-steam-btn'),
-           editModal: document.getElementById('edit-modal'),
-           editForm: document.getElementById('edit-form'),
-           iconPickerModal: document.getElementById('icon-picker-modal'),
-           gameDetailsModal: document.getElementById('game-details-modal'),
-           settingsBtn: document.getElementById('settings-btn'),
-           settingsBackBtn: document.getElementById('settings-back-btn'),
-           themeToggle: document.getElementById('theme-toggle'),
-           accentColorPicker: document.getElementById('accent-color-picker'),
-           notificationContainer: document.getElementById('notification-container'),
-           confirmModal: document.getElementById('confirm-modal'),
-           confirmMessage: document.getElementById('confirm-message'),
-           confirmOkBtn: document.getElementById('confirm-ok-btn'),
-           confirmCancelBtn: document.getElementById('confirm-cancel-btn'),
-           projectSearchInput: document.getElementById('project-search-input'),
-           sortOptions: document.getElementById('sort-options'),
-           launcherFilters: document.getElementById('launcher-filters'),
-           gameLibraryControls: document.getElementById('game-library-controls'),
-           dashboardView: document.getElementById('dashboard-view'),
-           recentGamesContainer: document.getElementById('recent-games-container'),
-           dashboardTodoList: document.getElementById('dashboard-todo-list'),
-           dashboardTodoInput: document.getElementById('dashboard-new-todo-input'),
-           dashboardTodoBtn: document.getElementById('dashboard-add-todo-btn'),
-           devToolsTodoList: document.getElementById('todo-list'),
-           devToolsTodoInput: document.getElementById('new-todo-input'),
-           devToolsTodoBtn: document.getElementById('add-todo-btn'),
-           pinnedProjectsContainer: document.getElementById('pinned-projects-container'),
-           dashboardCpuBar: document.getElementById('dashboard-cpu-bar'),
-           dashboardCpuPercent: document.getElementById('dashboard-cpu-percent'),
-           dashboardMemBar: document.getElementById('dashboard-mem-bar'),
-           dashboardMemPercent: document.getElementById('dashboard-mem-percent'),
-           dashboardDiskBar: document.getElementById('dashboard-disk-bar'),
-           dashboardDiskPercent: document.getElementById('dashboard-disk-percent'),
-           dashboardNetDownload: document.getElementById('dashboard-net-download'),
-           dashboardNetUpload: document.getElementById('dashboard-net-upload'),
-           devToolsCpuBar: document.getElementById('cpu-bar'),
-           devToolsCpuPercent: document.getElementById('cpu-percent'),
-           devToolsMemBar: document.getElementById('mem-bar'),
-           devToolsMemPercent: document.getElementById('mem-percent'),
-           devToolsDiskBar: document.getElementById('disk-bar'),
-           devToolsDiskPercent: document.getElementById('disk-percent'),
-           devToolsNetDownload: document.getElementById('net-download'),
-           devToolsNetUpload: document.getElementById('net-upload'),
+        const dom = {
+            allViews: document.querySelectorAll('.view-container'),
+            allModals: document.querySelectorAll('.modal-overlay'),
+            mainContent: document.getElementById('main-content'),
+            devtoolsView: document.getElementById('devtools-view'),
+            settingsView: document.getElementById('settings-view'),
+            welcomeScreen: document.getElementById('welcome-screen'),
+            mainTitle: document.getElementById('main-title'),
+            itemsContainer: document.getElementById('items-container'),
+            editModeBtn: document.getElementById('edit-mode-btn'),
+            refreshSteamBtn: document.getElementById('refresh-steam-btn'),
+            editModal: document.getElementById('edit-modal'),
+            editForm: document.getElementById('edit-form'),
+            iconPickerModal: document.getElementById('icon-picker-modal'),
+            gameDetailsModal: document.getElementById('game-details-modal'),
+            settingsBtn: document.getElementById('settings-btn'),
+            settingsBackBtn: document.getElementById('settings-back-btn'),
+            themeToggle: document.getElementById('theme-toggle'),
+            accentColorPicker: document.getElementById('accent-color-picker'),
+            notificationContainer: document.getElementById('notification-container'),
+            confirmModal: document.getElementById('confirm-modal'),
+            confirmMessage: document.getElementById('confirm-message'),
+            confirmOkBtn: document.getElementById('confirm-ok-btn'),
+            confirmCancelBtn: document.getElementById('confirm-cancel-btn'),
+            projectSearchInput: document.getElementById('project-search-input'),
+            sortOptions: document.getElementById('sort-options'),
+            launcherFilters: document.getElementById('launcher-filters'),
+            gameLibraryControls: document.getElementById('game-library-controls'),
+            dashboardView: document.getElementById('dashboard-view'),
+            recentGamesContainer: document.getElementById('recent-games-container'),
+            dashboardTodoList: document.getElementById('dashboard-todo-list'),
+            dashboardTodoInput: document.getElementById('dashboard-new-todo-input'),
+            dashboardTodoBtn: document.getElementById('dashboard-add-todo-btn'),
+            devToolsTodoList: document.getElementById('todo-list'),
+            devToolsTodoInput: document.getElementById('new-todo-input'),
+            devToolsTodoBtn: document.getElementById('add-todo-btn'),
+            pinnedProjectsContainer: document.getElementById('pinned-projects-container'),
+            dashboardCpuBar: document.getElementById('dashboard-cpu-bar'),
+            dashboardCpuPercent: document.getElementById('dashboard-cpu-percent'),
+            dashboardMemBar: document.getElementById('dashboard-mem-bar'),
+            dashboardMemPercent: document.getElementById('dashboard-mem-percent'),
+            dashboardDiskBar: document.getElementById('dashboard-disk-bar'),
+            dashboardDiskPercent: document.getElementById('dashboard-disk-percent'),
+            dashboardNetDownload: document.getElementById('dashboard-net-download'),
+            dashboardNetUpload: document.getElementById('dashboard-net-upload'),
+            devToolsCpuBar: document.getElementById('cpu-bar'),
+            devToolsCpuPercent: document.getElementById('cpu-percent'),
+            devToolsMemBar: document.getElementById('mem-bar'),
+            devToolsMemPercent: document.getElementById('mem-percent'),
+            devToolsDiskBar: document.getElementById('disk-bar'),
+            devToolsDiskPercent: document.getElementById('disk-percent'),
+            devToolsNetDownload: document.getElementById('net-download'),
+            devToolsNetUpload: document.getElementById('net-upload'),
         };
 
         const state = {
@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-       function showCustomNotification(message, type = 'success') {
+        function showCustomNotification(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `notification-toast ${type}`;
             const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
@@ -334,10 +334,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         showView(dom.dashboardView);
-        
+
         Promise.all([
             loadGames(),
-            window.electronAPI.readFile('projects-dev.json'), 
+            window.electronAPI.readFile('projects-dev.json'),
             window.electronAPI.projectsGetPinned()
         ]).then(([_, devProjects, pinned]) => {
             state.currentItems = devProjects || [];
@@ -358,13 +358,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.documentElement.style.setProperty(key, value);
                 }
             }
-            
+
             document.documentElement.style.setProperty('--accent-color', state.settings.accentColor);
             const accentRGB = hexToRgb(state.settings.accentColor);
             document.documentElement.style.setProperty('--accent-color-translucent', `rgba(${accentRGB.r}, ${accentRGB.g}, ${accentRGB.b}, 0.1)`);
 
             const hljsTheme = document.getElementById('hljs-theme');
-            hljsTheme.href = state.settings.theme === 'light' 
+            hljsTheme.href = state.settings.theme === 'light'
                 ? 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css'
                 : 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css';
 
@@ -389,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-            function initSettings() {
+        function initSettings() {
             const accentColors = ['#2563eb', '#8b5cf6', '#db2777', '#f59e0b', '#10b981', '#ef4444'];
             dom.accentColorPicker.innerHTML = '';
             accentColors.forEach(color => {
@@ -410,17 +410,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 applySettings();
                 saveSettings();
             });
-            
-                const themeEditorContainer = document.getElementById('theme-editor-container');
-                const resetThemeBtn = document.getElementById('reset-theme-btn');
-                const themeColors = [
-                    { var: '--color-bg-primary', label: 'Fond Principal' },
-                    { var: '--color-bg-secondary', label: 'Fond Secondaire' },
-                    { var: '--color-bg-tertiary', label: 'Fond Tertiaire' },
-                    { var: '--color-text-main', label: 'Texte Principal' },
-                    { var: '--color-text-secondary', label: 'Texte Secondaire' },
-                    { var: '--color-border-primary', label: 'Bordure' },
-                ];
+
+            const themeEditorContainer = document.getElementById('theme-editor-container');
+            const resetThemeBtn = document.getElementById('reset-theme-btn');
+            const themeColors = [
+                { var: '--color-bg-primary', label: 'Fond Principal' },
+                { var: '--color-bg-secondary', label: 'Fond Secondaire' },
+                { var: '--color-bg-tertiary', label: 'Fond Tertiaire' },
+                { var: '--color-text-main', label: 'Texte Principal' },
+                { var: '--color-text-secondary', label: 'Texte Secondaire' },
+                { var: '--color-border-primary', label: 'Bordure' },
+            ];
 
             const githubTokenInput = document.getElementById('github-token-input');
             const steamApiKeyInput = document.getElementById('steam-api-key-input');
@@ -431,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (state.settings.githubToken) githubTokenInput.value = state.settings.githubToken;
             if (state.settings.steamApiKey) steamApiKeyInput.value = state.settings.steamApiKey;
             if (state.settings.steamId) steamIdInput.value = state.settings.steamId;
-            if (!state.settings.customTheme) { state.settings.customTheme = {};}
+            if (!state.settings.customTheme) { state.settings.customTheme = {}; }
 
             githubTokenInput.addEventListener('change', () => {
                 state.settings.githubToken = githubTokenInput.value;
@@ -449,62 +449,62 @@ document.addEventListener('DOMContentLoaded', () => {
                 showCustomNotification('SteamID sauvegardé.');
             });
 
-                window.electronAPI.getAppVersion().then(version => {
-                    if (appVersionEl) {
-                        appVersionEl.textContent = `v${version}`;
-                    }
-                });
-
-                window.electronAPI.getLaunchOnStartup().then(isEnabled => {
-                    launchOnStartupToggle.checked = isEnabled;
-                });
-
-                launchOnStartupToggle.addEventListener('change', () => {
-                    const shouldLaunch = launchOnStartupToggle.checked;
-                    window.electronAPI.setLaunchOnStartup(shouldLaunch);
-                });
-
-                function buildThemeEditor() {
-                    themeEditorContainer.innerHTML = '';
-                    themeColors.forEach(({ var: cssVar, label }) => {
-                        const row = document.createElement('div');
-                        row.className = 'theme-editor-row';
-
-                        const labelEl = document.createElement('span');
-                        labelEl.className = 'theme-editor-label';
-                        labelEl.textContent = label;
-
-                        const inputEl = document.createElement('input');
-                        inputEl.type = 'color';
-                        inputEl.className = 'theme-editor-input';
-
-                        const savedColor = state.settings.customTheme?.[cssVar];
-                        const currentColor = getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim();
-                        inputEl.value = savedColor || currentColor;
-
-                        inputEl.addEventListener('input', () => {
-                            const newColor = inputEl.value;
-                            if (!state.settings.customTheme) state.settings.customTheme = {};
-                            document.documentElement.style.setProperty(cssVar, newColor);
-                            state.settings.customTheme[cssVar] = newColor;
-                            saveSettings();
-                        });
-
-                        row.appendChild(labelEl);
-                        row.appendChild(inputEl);
-                        themeEditorContainer.appendChild(row);
-                    });
+            window.electronAPI.getAppVersion().then(version => {
+                if (appVersionEl) {
+                    appVersionEl.textContent = `v${version}`;
                 }
+            });
 
-                resetThemeBtn.addEventListener('click', () => {
-                    state.settings.customTheme = {};
-                    saveSettings();
-                    applySettings();
-                    buildThemeEditor();
-                    showCustomNotification('Thème réinitialisé.');
+            window.electronAPI.getLaunchOnStartup().then(isEnabled => {
+                launchOnStartupToggle.checked = isEnabled;
+            });
+
+            launchOnStartupToggle.addEventListener('change', () => {
+                const shouldLaunch = launchOnStartupToggle.checked;
+                window.electronAPI.setLaunchOnStartup(shouldLaunch);
+            });
+
+            function buildThemeEditor() {
+                themeEditorContainer.innerHTML = '';
+                themeColors.forEach(({ var: cssVar, label }) => {
+                    const row = document.createElement('div');
+                    row.className = 'theme-editor-row';
+
+                    const labelEl = document.createElement('span');
+                    labelEl.className = 'theme-editor-label';
+                    labelEl.textContent = label;
+
+                    const inputEl = document.createElement('input');
+                    inputEl.type = 'color';
+                    inputEl.className = 'theme-editor-input';
+
+                    const savedColor = state.settings.customTheme?.[cssVar];
+                    const currentColor = getComputedStyle(document.documentElement).getPropertyValue(cssVar).trim();
+                    inputEl.value = savedColor || currentColor;
+
+                    inputEl.addEventListener('input', () => {
+                        const newColor = inputEl.value;
+                        if (!state.settings.customTheme) state.settings.customTheme = {};
+                        document.documentElement.style.setProperty(cssVar, newColor);
+                        state.settings.customTheme[cssVar] = newColor;
+                        saveSettings();
+                    });
+
+                    row.appendChild(labelEl);
+                    row.appendChild(inputEl);
+                    themeEditorContainer.appendChild(row);
                 });
+            }
 
-            buildThemeEditor();    
+            resetThemeBtn.addEventListener('click', () => {
+                state.settings.customTheme = {};
+                saveSettings();
+                applySettings();
+                buildThemeEditor();
+                showCustomNotification('Thème réinitialisé.');
+            });
+
+            buildThemeEditor();
             state.settingsInitialized = true;
             applySettings();
         }
@@ -537,7 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (itemsToRender.length === 0) {
                 dom.itemsContainer.innerHTML = `<p class="text-center col-span-full text-tertiary">Aucun projet trouvé.</p>`;
                 if (state.isEditMode) {
-                     const addItemCard = document.createElement('div');
+                    const addItemCard = document.createElement('div');
                     addItemCard.className = 'border-2 border-dashed border-secondary hover:border-accent hover:text-accent transition-all duration-300 rounded-xl flex justify-center items-center text-tertiary cursor-pointer min-h-[250px]';
                     addItemCard.innerHTML = `<div class="text-center"><i class="fas fa-plus fa-2x mb-2"></i><p>Ajouter un item</p></div>`;
                     addItemCard.addEventListener('click', () => openEditModal());
@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 itemCard.dataset.index = originalIndex;
                 if (state.isEditMode) itemCard.draggable = true;
                 const isPinned = state.pinnedProjects.includes(originalIndex);
-                
+
                 itemCard.innerHTML = `
                     <button class="pin-btn ${isPinned ? 'pinned' : ''}" title="Épingler au tableau de bord"> <i class="fas fa-thumbtack"></i> </button>
                     <div class="card-controls"><button class="card-control-btn edit" title="Modifier"><i class="fas fa-pencil-alt"></i></button><button class="card-control-btn delete" title="Supprimer"><i class="fas fa-trash"></i></button></div>
@@ -609,17 +609,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         if (actionsContainer) {
                             let actionsHtml = `<div class="card-actions"><button class="action-btn" data-action="open-explorer" title="Ouvrir dans l'explorateur"><i class="fas fa-folder-open"></i></button><button class="action-btn" data-action="open-terminal" title="Ouvrir un terminal"><i class="fas fa-terminal"></i></button>`;
-                            if(details.branch) {
+                            if (details.branch) {
                                 actionsHtml += `<button class="action-btn git-btn" data-action="git-pull" title="Git Pull"><span class="btn-text"><i class="fas fa-arrow-down"></i></span><i class="fas fa-spinner spinner"></i></button><button class="action-btn git-btn" data-action="git-push" title="Git Push"><span class="btn-text"><i class="fas fa-arrow-up"></i></span><i class="fas fa-spinner spinner"></i></button>`;
                             }
                             actionsHtml += `</div>`;
                             actionsContainer.innerHTML = actionsHtml;
                         }
                         if (npmScriptsContainer && details.scripts) {
-                            const scriptsHtml = Object.keys(details.scripts).map(script => 
+                            const scriptsHtml = Object.keys(details.scripts).map(script =>
                                 `<button class="npm-script-btn" data-script="${script}" title="npm run ${script}">${script}</button>`
                             ).join('');
-                            if(scriptsHtml) {
+                            if (scriptsHtml) {
                                 npmScriptsContainer.innerHTML = `<div class="npm-scripts-header">Scripts NPM</div><div class="npm-scripts-list">${scriptsHtml}</div>`;
                             }
                         }
@@ -786,7 +786,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const newOrder = Array.from(dom.itemsContainer.querySelectorAll('.item-card[draggable="true"]'))
                         .map(c => state.currentItems[parseInt(c.dataset.index)]);
                     state.currentItems = newOrder;
-                    window.electronAPI.saveItems({ filePath: state.currentFilePath, data: state.currentItems });
+                    window.electronAPI.saveItems({ filePath: 'projects-dev.json', data: state.currentItems });
                     renderItems();
                 }
             });
@@ -1468,88 +1468,88 @@ document.addEventListener('DOMContentLoaded', () => {
             loadProjects();
         }
 
-async function loadGames() {
-    dom.mainTitle.textContent = 'Ma Bibliothèque de Jeux';
-    dom.editModeBtn.style.display = 'none';
-    dom.refreshSteamBtn.style.display = 'block';
+        async function loadGames() {
+            dom.mainTitle.textContent = 'Ma Bibliothèque de Jeux';
+            dom.editModeBtn.style.display = 'none';
+            dom.refreshSteamBtn.style.display = 'block';
 
-    showSkeletonLoaders();
+            showSkeletonLoaders();
 
-    try {
-        const results = await Promise.allSettled([
-            window.electronAPI.steamGetOwnedGames(),
-            window.electronAPI.steamGetInstalledApps(),
-            window.electronAPI.gamesGetEpicGames(),
-            window.electronAPI.gamesGetUbisoftGames(),
-            window.electronAPI.gamesGetXboxGames()
-        ]);
+            try {
+                const results = await Promise.allSettled([
+                    window.electronAPI.steamGetOwnedGames(),
+                    window.electronAPI.steamGetInstalledApps(),
+                    window.electronAPI.gamesGetEpicGames(),
+                    window.electronAPI.gamesGetUbisoftGames(),
+                    window.electronAPI.gamesGetXboxGames()
+                ]);
 
-        const [
-            steamResult,
-            installedSteamResult,
-            epicResult,
-            ubisoftResult,
-            xboxResult
-        ] = results;
+                const [
+                    steamResult,
+                    installedSteamResult,
+                    epicResult,
+                    ubisoftResult,
+                    xboxResult
+                ] = results;
 
-        let allGames = [];
-   
-        if (steamResult.status === 'fulfilled' && steamResult.value.success) {
-            const installedAppIds = (installedSteamResult.status === 'fulfilled' && installedSteamResult.value.success) ? installedSteamResult.value.appids : [];
-            const steamGames = steamResult.value.games.map(game => ({
-                ...game,
-                launcher: 'steam',
-                is_installed: installedAppIds.includes(String(game.appid))
-            })).filter(game => game.is_installed);
-            allGames.push(...steamGames);
-        }
+                let allGames = [];
 
-        if (epicResult.status === 'fulfilled' && epicResult.value.success) {
-            allGames.push(...epicResult.value.games);
-        }
+                if (steamResult.status === 'fulfilled' && steamResult.value.success) {
+                    const installedAppIds = (installedSteamResult.status === 'fulfilled' && installedSteamResult.value.success) ? installedSteamResult.value.appids : [];
+                    const steamGames = steamResult.value.games.map(game => ({
+                        ...game,
+                        launcher: 'steam',
+                        is_installed: installedAppIds.includes(String(game.appid))
+                    })).filter(game => game.is_installed);
+                    allGames.push(...steamGames);
+                }
 
-        if (ubisoftResult.status === 'fulfilled' && ubisoftResult.value.success) {
-            allGames.push(...ubisoftResult.value.games);
-        }
+                if (epicResult.status === 'fulfilled' && epicResult.value.success) {
+                    allGames.push(...epicResult.value.games);
+                }
 
-        if (xboxResult.status === 'fulfilled' && xboxResult.value.success) {
-            allGames.push(...xboxResult.value.games);
-        }
-        
-        const uniqueGames = [];
-        const seenNames = new Set();
-        
-        allGames.sort((a,b) => (a.launcher === 'steam' ? -1 : 1));
-        
-        for (const game of allGames) {
-            if (!seenNames.has(game.name.toLowerCase())) {
-                uniqueGames.push(game);
-                seenNames.add(game.name.toLowerCase());
+                if (ubisoftResult.status === 'fulfilled' && ubisoftResult.value.success) {
+                    allGames.push(...ubisoftResult.value.games);
+                }
+
+                if (xboxResult.status === 'fulfilled' && xboxResult.value.success) {
+                    allGames.push(...xboxResult.value.games);
+                }
+
+                const uniqueGames = [];
+                const seenNames = new Set();
+
+                allGames.sort((a, b) => (a.launcher === 'steam' ? -1 : 1));
+
+                for (const game of allGames) {
+                    if (!seenNames.has(game.name.toLowerCase())) {
+                        uniqueGames.push(game);
+                        seenNames.add(game.name.toLowerCase());
+                    }
+                }
+
+                state.currentGames = uniqueGames;
+                displayGames();
+
+            } catch (error) {
+                state.currentGames = [];
+                dom.itemsContainer.innerHTML = `<p class="text-center col-span-full text-red-400">Erreur critique lors du chargement des jeux : ${error.message}</p>`;
             }
         }
 
-        state.currentGames = uniqueGames;
-        displayGames();
+        async function displayGames() {
+            if (!state.currentGames) return;
 
-    } catch (error) {
-        state.currentGames = [];
-        dom.itemsContainer.innerHTML = `<p class="text-center col-span-full text-red-400">Erreur critique lors du chargement des jeux : ${error.message}</p>`;
-    }
-}
+            let gamesToDisplay = [...state.currentGames];
+            const searchTerm = dom.projectSearchInput.value.toLowerCase();
 
-        async function displayGames() { 
-           if (!state.currentGames) return;
+            if (state.activeFilter !== 'all') {
+                gamesToDisplay = gamesToDisplay.filter(game => game.launcher === state.activeFilter);
+            }
 
-           let gamesToDisplay = [...state.currentGames];
-           const searchTerm = dom.projectSearchInput.value.toLowerCase();
-
-           if (state.activeFilter !== 'all') {
-               gamesToDisplay = gamesToDisplay.filter(game => game.launcher === state.activeFilter);
-           }
-
-           if (searchTerm) {
-               gamesToDisplay = gamesToDisplay.filter(game => game.name.toLowerCase().includes(searchTerm));
-           }
+            if (searchTerm) {
+                gamesToDisplay = gamesToDisplay.filter(game => game.name.toLowerCase().includes(searchTerm));
+            }
 
             const recentlyPlayed = await window.electronAPI.gamesGetRecentlyPlayed();
             const launchOrder = recentlyPlayed.reduce((acc, item, index) => {
@@ -1591,25 +1591,25 @@ async function loadGames() {
                 return;
             }
 
-           gamesToDisplay.forEach(game => {
-               const card = document.createElement('div');
-               card.className = `game-card ${game.is_installed ? 'is-installed' : 'not-installed'}`;
-               card.dataset.appid = game.appid;
-               card.dataset.launcher = game.launcher;
+            gamesToDisplay.forEach(game => {
+                const card = document.createElement('div');
+                card.className = `game-card ${game.is_installed ? 'is-installed' : 'not-installed'}`;
+                card.dataset.appid = game.appid;
+                card.dataset.launcher = game.launcher;
 
-               const playtimeHours = (game.playtime_forever || 0) > 0 ? (game.playtime_forever / 60).toFixed(1) : '0.0';
+                const playtimeHours = (game.playtime_forever || 0) > 0 ? (game.playtime_forever / 60).toFixed(1) : '0.0';
 
-               let launcherIcon = '';
-               switch (game.launcher) {
-                   case 'steam': launcherIcon = '<i class="fab fa-steam absolute bottom-2 right-2 text-white/70"></i>'; break;
-                   case 'epic': launcherIcon = '<i class="fa-solid fa-e absolute bottom-2 right-2 text-white/70"></i>'; break;
-                   case 'ubisoft': launcherIcon = '<i class="fa-brands fa-ubisoft absolute bottom-2 right-2 text-white/70"></i>'; break;
-                   case 'xbox': launcherIcon = '<i class="fab fa-xbox absolute bottom-2 right-2 text-white/70"></i>'; break;
-               }
+                let launcherIcon = '';
+                switch (game.launcher) {
+                    case 'steam': launcherIcon = '<i class="fab fa-steam absolute bottom-2 right-2 text-white/70"></i>'; break;
+                    case 'epic': launcherIcon = '<i class="fa-solid fa-e absolute bottom-2 right-2 text-white/70"></i>'; break;
+                    case 'ubisoft': launcherIcon = '<i class="fa-brands fa-ubisoft absolute bottom-2 right-2 text-white/70"></i>'; break;
+                    case 'xbox': launcherIcon = '<i class="fab fa-xbox absolute bottom-2 right-2 text-white/70"></i>'; break;
+                }
 
-               const bannerStyle = game.banner_url ? `background-image: url('${game.banner_url}')` : 'background-color: #2a2a2a;';
+                const bannerStyle = game.banner_url ? `background-image: url('${game.banner_url}')` : 'background-color: #2a2a2a;';
 
-               card.innerHTML = `
+                card.innerHTML = `
             <div class="game-card-banner" style="${bannerStyle}">
                 ${game.is_installed ? '<div class="installed-badge">Installé</div>' : ''}
                 ${launcherIcon}
@@ -1620,54 +1620,54 @@ async function loadGames() {
                 <button class="game-card-launch-btn" data-appid="${game.appid}" data-launcher="${game.launcher}">Lancer le jeu</button>
             </div>
         `;
-               dom.itemsContainer.appendChild(card);
-           });
-       }
-
-       function formatDataArray(arr) {
-    if (!arr || arr.length === 0) {
-        return 'N/A';
-    }
-    if (typeof arr[0] === 'string') {
-        return arr.join(', ');
-    }
-    return arr.map(item => item.name || item.description).join(', ');
-}
-
-async function openGameDetailsModal(game) {
-    const modal = document.getElementById('game-details-modal');
-    const contentEl = document.getElementById('game-details-content');
-    
-    modal.classList.remove('is-inactive');
-    contentEl.innerHTML = '<p class="text-center text-tertiary p-10">Chargement des détails...</p>';
-
-    try {
-        let rawDetails;
-        
-        if (game.launcher === 'steam') {
-            const result = await window.electronAPI.steamGetGameDetails(game.appid);
-            if (!result.success) throw new Error(result.error);
-            rawDetails = result.details;
-        } else if (game.rawg_id) {
-            const result = await window.electronAPI.gamesGetRawgDetails(game.rawg_id);
-            if (!result.success) throw new Error(result.error);
-            rawDetails = result.details;
-        } else {
-             throw new Error("Source de détails inconnue pour ce jeu.");
+                dom.itemsContainer.appendChild(card);
+            });
         }
 
-        const details = {
-            name: rawDetails.name || 'Titre Inconnu',
-            header_image: rawDetails.header_image || rawDetails.background_image,
-            description: rawDetails.detailed_description || rawDetails.description,
-            release_date: rawDetails.release_date?.date || rawDetails.released,
-            developers: formatDataArray(rawDetails.developers),
-            publishers: formatDataArray(rawDetails.publishers),
-            genres: formatDataArray(rawDetails.genres),
-            features: formatDataArray(rawDetails.categories || rawDetails.tags)
-        };
+        function formatDataArray(arr) {
+            if (!arr || arr.length === 0) {
+                return 'N/A';
+            }
+            if (typeof arr[0] === 'string') {
+                return arr.join(', ');
+            }
+            return arr.map(item => item.name || item.description).join(', ');
+        }
 
-        contentEl.innerHTML = `
+        async function openGameDetailsModal(game) {
+            const modal = document.getElementById('game-details-modal');
+            const contentEl = document.getElementById('game-details-content');
+
+            modal.classList.remove('is-inactive');
+            contentEl.innerHTML = '<p class="text-center text-tertiary p-10">Chargement des détails...</p>';
+
+            try {
+                let rawDetails;
+
+                if (game.launcher === 'steam') {
+                    const result = await window.electronAPI.steamGetGameDetails(game.appid);
+                    if (!result.success) throw new Error(result.error);
+                    rawDetails = result.details;
+                } else if (game.rawg_id) {
+                    const result = await window.electronAPI.gamesGetRawgDetails(game.rawg_id);
+                    if (!result.success) throw new Error(result.error);
+                    rawDetails = result.details;
+                } else {
+                    throw new Error("Source de détails inconnue pour ce jeu.");
+                }
+
+                const details = {
+                    name: rawDetails.name || 'Titre Inconnu',
+                    header_image: rawDetails.header_image || rawDetails.background_image,
+                    description: rawDetails.detailed_description || rawDetails.description,
+                    release_date: rawDetails.release_date?.date || rawDetails.released,
+                    developers: formatDataArray(rawDetails.developers),
+                    publishers: formatDataArray(rawDetails.publishers),
+                    genres: formatDataArray(rawDetails.genres),
+                    features: formatDataArray(rawDetails.categories || rawDetails.tags)
+                };
+
+                contentEl.innerHTML = `
             <div class="game-details-header">
                 <div class="game-details-background" style="background-image: url('${details.header_image}')"></div>
                 <div class="game-details-header-content">
@@ -1705,51 +1705,51 @@ async function openGameDetailsModal(game) {
                 </button>
             </div>
         `;
-        
-        loadAndRenderAchievements(game);
 
-    } catch (error) {
-        contentEl.innerHTML = `<p class="text-center text-red-400 p-10">Impossible de charger les détails : ${error.message}</p>`;
-    }
-}
+                loadAndRenderAchievements(game);
 
-async function loadAndRenderAchievements(game) {
-    const container = document.getElementById('game-details-achievements-container');
-    if (!container) return;
-
-    container.innerHTML = '<p class="text-tertiary">Chargement des succès...</p>';
-
-    try {
-        let result;
-        if (game.launcher === 'steam') {
-            result = await window.electronAPI.steamGetPlayerAchievements(game.appid);
-        } else if (game.rawg_id) {
-            result = await window.electronAPI.gamesGetRawgAchievements(game.rawg_id);
-        } else {
-            throw new Error("Impossible de trouver une source pour les succès.");
+            } catch (error) {
+                contentEl.innerHTML = `<p class="text-center text-red-400 p-10">Impossible de charger les détails : ${error.message}</p>`;
+            }
         }
 
-        if (result.success && result.achievements.length > 0) {
-            container.innerHTML = '';
-            result.achievements.forEach(ach => {
-                const item = document.createElement('div');
-                item.className = `achievement-item ${ach.unlocked ? 'unlocked' : 'locked'}`;
-                item.innerHTML = `
+        async function loadAndRenderAchievements(game) {
+            const container = document.getElementById('game-details-achievements-container');
+            if (!container) return;
+
+            container.innerHTML = '<p class="text-tertiary">Chargement des succès...</p>';
+
+            try {
+                let result;
+                if (game.launcher === 'steam') {
+                    result = await window.electronAPI.steamGetPlayerAchievements(game.appid);
+                } else if (game.rawg_id) {
+                    result = await window.electronAPI.gamesGetRawgAchievements(game.rawg_id);
+                } else {
+                    throw new Error("Impossible de trouver une source pour les succès.");
+                }
+
+                if (result.success && result.achievements.length > 0) {
+                    container.innerHTML = '';
+                    result.achievements.forEach(ach => {
+                        const item = document.createElement('div');
+                        item.className = `achievement-item ${ach.unlocked ? 'unlocked' : 'locked'}`;
+                        item.innerHTML = `
                     <img src="${ach.icon}" class="achievement-icon" alt="${ach.name}" onerror="this.style.display='none'">
                     <div class="achievement-details">
                         <h4>${ach.name}</h4>
                         <p>${ach.description || 'Pas de description.'}</p>
                     </div>
                 `;
-                container.appendChild(item);
-            });
-        } else {
-            container.innerHTML = `<p class="text-tertiary">${result.error || 'Ce jeu n\'a pas de succès listés.'}</p>`;
+                        container.appendChild(item);
+                    });
+                } else {
+                    container.innerHTML = `<p class="text-tertiary">${result.error || 'Ce jeu n\'a pas de succès listés.'}</p>`;
+                }
+            } catch (error) {
+                container.innerHTML = `<p class="text-red-400">Erreur de chargement des succès : ${error.message}</p>`;
+            }
         }
-    } catch (error) {
-        container.innerHTML = `<p class="text-red-400">Erreur de chargement des succès : ${error.message}</p>`;
-    }
-}
 
         dom.sortOptions.addEventListener('change', () => {
             state.activeSort = dom.sortOptions.value;
@@ -1787,7 +1787,7 @@ async function loadAndRenderAchievements(game) {
         document.getElementById('max-btn').addEventListener('click', () => window.electronAPI.maximizeWindow());
         document.getElementById('close-btn').addEventListener('click', () => window.electronAPI.closeWindow());
 
-         document.querySelectorAll('.welcome-btn').forEach(button => {
+        document.querySelectorAll('.welcome-btn').forEach(button => {
             button.addEventListener('click', (event) => {
                 createRipple(event);
                 setTimeout(() => {
@@ -1796,7 +1796,7 @@ async function loadAndRenderAchievements(game) {
                         loadItems('projects-dev.json', 'Mes Projets de Développement');
                         dom.editModeBtn.style.display = 'block';
                         dom.refreshSteamBtn.style.display = 'none';
-                        dom.gameLibraryControls.style.display = 'none'; 
+                        dom.gameLibraryControls.style.display = 'none';
                     } else if (button.id === 'devtools-btn') {
                         showView(dom.devtoolsView);
                         if (!state.devToolsInitialized) {
@@ -1819,7 +1819,7 @@ async function loadAndRenderAchievements(game) {
             showView(dom.mainContent);
             dom.mainTitle.textContent = 'Ma Bibliothèque de Jeux';
             displayGames();
-            
+
             dom.editModeBtn.style.display = 'none';
             dom.refreshSteamBtn.style.display = 'block';
             dom.gameLibraryControls.style.display = 'flex';
@@ -1829,7 +1829,7 @@ async function loadAndRenderAchievements(game) {
             showView(dom.mainContent);
             dom.mainTitle.textContent = 'Mes Projets de Développement';
             renderItems();
-            
+
             dom.editModeBtn.style.display = 'block';
             dom.refreshSteamBtn.style.display = 'none';
             dom.gameLibraryControls.style.display = 'none';
@@ -1909,14 +1909,8 @@ async function loadAndRenderAchievements(game) {
             } else {
                 state.currentItems.push(newItem);
             }
-            console.log(`Sauvegarde en cours vers le fichier : ${state.currentFilePath}`);
-            if (!state.currentFilePath || !state.currentFilePath.endsWith('.json')) {
-                showCustomNotification('Erreur : Chemin de sauvegarde invalide.', 'error');
-                console.error('Chemin de sauvegarde invalide :', state.currentFilePath);
-                return;
-            }
 
-            window.electronAPI.saveItems({ filePath: state.currentFilePath, data: state.currentItems });
+            window.electronAPI.saveItems({ filePath: 'projects-dev.json', data: state.currentItems });
             showCustomNotification('Projet sauvegardé !');
             renderItems();
             closeEditModal();
@@ -1951,97 +1945,97 @@ async function loadAndRenderAchievements(game) {
         });
 
         document.body.addEventListener('click', async (e) => {
-    const isGamingView = dom.mainTitle.textContent.includes('Bibliothèque');
-    const isDevView = dom.mainTitle.textContent.includes('Projets');
+            const isGamingView = dom.mainTitle.textContent.includes('Bibliothèque');
+            const isDevView = dom.mainTitle.textContent.includes('Projets');
 
-    if (isGamingView) {
-        const launchButton = e.target.closest('.game-card-launch-btn, .game-footer-play-btn');
-        const gameCard = e.target.closest('.game-card');
+            if (isGamingView) {
+                const launchButton = e.target.closest('.game-card-launch-btn, .game-footer-play-btn');
+                const gameCard = e.target.closest('.game-card');
 
-        if (!launchButton && !gameCard) return;
+                if (!launchButton && !gameCard) return;
 
-        const clickedElement = launchButton || gameCard;
-        const appid = clickedElement.dataset.appid;
-        const launcher = clickedElement.dataset.launcher;
-        const game = state.currentGames.find(g => String(g.appid) === String(appid) && g.launcher === launcher);
+                const clickedElement = launchButton || gameCard;
+                const appid = clickedElement.dataset.appid;
+                const launcher = clickedElement.dataset.launcher;
+                const game = state.currentGames.find(g => String(g.appid) === String(appid) && g.launcher === launcher);
 
-        if (!game) return;
+                if (!game) return;
 
-        if (launchButton) {
-            e.stopPropagation();
-            launchGame(game);
-            showCustomNotification(`Lancement de ${game.name}...`);
-        } else if (gameCard) {
-            openGameDetailsModal(game);
-        }
-        return;
-    }
-
-    if (isDevView) {
-        const card = e.target.closest('.item-card');
-        if (!card) return;
-
-        const index = parseInt(card.dataset.index, 10);
-        const item = state.currentItems[index];
-        if (!item) return;
-
-        if (e.target.closest('.pin-btn')) {
-            e.stopPropagation();
-            const indexInPinned = state.pinnedProjects.indexOf(index);
-            if (indexInPinned > -1) {
-                state.pinnedProjects.splice(indexInPinned, 1);
-            } else {
-                state.pinnedProjects.push(index);
-            }
-            await window.electronAPI.projectsSetPinned(state.pinnedProjects);
-            renderItems();
-            populateDashboard();
-
-        } else if (state.isEditMode && e.target.closest('.card-control-btn.edit')) {
-            openEditModal(index);
-
-        } else if (state.isEditMode && e.target.closest('.card-control-btn.delete')) {
-            const confirmed = await showConfirmationModal(`Êtes-vous sûr de vouloir supprimer "${item.name}" ?`);
-            if (confirmed) {
-                state.currentItems.splice(index, 1);
-                window.electronAPI.saveItems({ filePath: state.currentFilePath, data: state.currentItems });
-                showCustomNotification('Projet supprimé.', 'error');
-                renderItems();
+                if (launchButton) {
+                    e.stopPropagation();
+                    launchGame(game);
+                    showCustomNotification(`Lancement de ${game.name}...`);
+                } else if (gameCard) {
+                    openGameDetailsModal(game);
+                }
+                return;
             }
 
-        } else if (e.target.closest('.launch-btn') && !state.isEditMode) {
-            if (item.commands) {
-                window.electronAPI.launchProject({ commands: item.commands, name: item.name });
-                showCustomNotification(`Lancement de ${item.name}...`);
-            }
-        } else if (e.target.closest('.action-btn')) {
-             const action = e.target.closest('.action-btn').dataset.action;
-             if (item.path) {
-                if (action.startsWith('git-')) {
-                    const button = e.target.closest('.action-btn');
-                    button.classList.add('loading');
-                    const command = action.replace('git-', '');
-                    const result = await window.electronAPI.gitCommand({ command, path: item.path });
-                    button.classList.remove('loading');
-                    if (result.success) {
-                        showCustomNotification(`Git ${command} réussi !`);
-                        renderItems();
+            if (isDevView) {
+                const card = e.target.closest('.item-card');
+                if (!card) return;
+
+                const index = parseInt(card.dataset.index, 10);
+                const item = state.currentItems[index];
+                if (!item) return;
+
+                if (e.target.closest('.pin-btn')) {
+                    e.stopPropagation();
+                    const indexInPinned = state.pinnedProjects.indexOf(index);
+                    if (indexInPinned > -1) {
+                        state.pinnedProjects.splice(indexInPinned, 1);
                     } else {
-                        showCustomNotification(`Erreur Git: ${result.message}`, 'error');
+                        state.pinnedProjects.push(index);
                     }
-                } else {
-                    window.electronAPI.projectAction({ action, path: item.path });
+                    await window.electronAPI.projectsSetPinned(state.pinnedProjects);
+                    renderItems();
+                    populateDashboard();
+
+                } else if (state.isEditMode && e.target.closest('.card-control-btn.edit')) {
+                    openEditModal(index);
+
+                } else if (state.isEditMode && e.target.closest('.card-control-btn.delete')) {
+                    const confirmed = await showConfirmationModal(`Êtes-vous sûr de vouloir supprimer "${item.name}" ?`);
+                    if (confirmed) {
+                        state.currentItems.splice(index, 1);
+                        window.electronAPI.saveItems({ filePath: 'projects-dev.json', data: state.currentItems });
+                        showCustomNotification('Projet supprimé.', 'error');
+                        renderItems();
+                    }
+
+                } else if (e.target.closest('.launch-btn') && !state.isEditMode) {
+                    if (item.commands) {
+                        window.electronAPI.launchProject({ commands: item.commands, name: item.name });
+                        showCustomNotification(`Lancement de ${item.name}...`);
+                    }
+                } else if (e.target.closest('.action-btn')) {
+                    const action = e.target.closest('.action-btn').dataset.action;
+                    if (item.path) {
+                        if (action.startsWith('git-')) {
+                            const button = e.target.closest('.action-btn');
+                            button.classList.add('loading');
+                            const command = action.replace('git-', '');
+                            const result = await window.electronAPI.gitCommand({ command, path: item.path });
+                            button.classList.remove('loading');
+                            if (result.success) {
+                                showCustomNotification(`Git ${command} réussi !`);
+                                renderItems();
+                            } else {
+                                showCustomNotification(`Erreur Git: ${result.message}`, 'error');
+                            }
+                        } else {
+                            window.electronAPI.projectAction({ action, path: item.path });
+                        }
+                    }
+                } else if (e.target.closest('.npm-script-btn')) {
+                    const script = e.target.closest('.npm-script-btn').dataset.script;
+                    if (item.path && script) {
+                        window.electronAPI.runNpmScript({ projectPath: item.path, script: script });
+                    }
                 }
             }
-        } else if (e.target.closest('.npm-script-btn')) {
-            const script = e.target.closest('.npm-script-btn').dataset.script;
-            if (item.path && script) {
-                window.electronAPI.runNpmScript({ projectPath: item.path, script: script });
-            }
-        }
-    }
-});
-        
+        });
+
         const updateModal = document.getElementById('update-modal');
         const updateVersionEl = document.getElementById('update-version');
         const updateNotesEl = document.getElementById('update-notes');

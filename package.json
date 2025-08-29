@@ -1,6 +1,6 @@
 {
   "name": "9cpanel",
-  "version": "1.11.2",
+  "version": "1.11.3",
   "description": "Panel de développement et Gaming",
   "main": "main.js",
   "scripts": {
@@ -50,8 +50,9 @@
       "perMachine": false
     },
     "publish": {
-      "provider": "generic",
-      "url": "http://127.0.0.1:8080"
+      "provider": "github",
+      "owner": "9caka",
+      "repo": "9cPanel"
     }
   }
 }

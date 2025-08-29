@@ -1759,3 +1759,13 @@ html[data-theme="light"] .theme-toggle-label .fa-moon {
     background-color: var(--accent-color);
     color: white;
 }
+
+.app-footer {
+    width: 100%;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    color: var(--color-text-tertiary);
+    font-size: 0.8rem;
+    text-align: center;
+    opacity: 0.6;
+}
